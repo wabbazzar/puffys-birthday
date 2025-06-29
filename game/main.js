@@ -611,23 +611,27 @@ class GameScene extends Phaser.Scene {
         
         // Touch events
         jumpBtn.addEventListener('touchstart', (e) => {
+            console.log('🟠 JUMP BUTTON TOUCHED!');
             e.preventDefault();
             jumpBtn.classList.add('pressed');
             this.handleJump();
         }, { passive: false });
         
         jumpBtn.addEventListener('touchend', (e) => {
+            console.log('🟠 JUMP BUTTON RELEASED!');
             e.preventDefault();
             jumpBtn.classList.remove('pressed');
         }, { passive: false });
         
         // Mouse events for desktop testing
         jumpBtn.addEventListener('mousedown', (e) => {
+            console.log('🟠 JUMP BUTTON CLICKED!');
             jumpBtn.classList.add('pressed');
             this.handleJump();
         });
         
         jumpBtn.addEventListener('mouseup', (e) => {
+            console.log('🟠 JUMP BUTTON MOUSE RELEASED!');
             jumpBtn.classList.remove('pressed');
         });
         
@@ -676,20 +680,29 @@ class GameScene extends Phaser.Scene {
     }
     
     handleJump() {
-        if (!this.puffy || !this.puffy.sprite || !this.puffy.sprite.body) return;
+        console.log('🟠 handleJump() called!');
         
-        // Only jump if on ground or platform
-        if (this.puffy.sprite.body.touching.down || this.puffy.sprite.body.blocked.down) {
+        if (!this.puffy || !this.puffy.sprite || !this.puffy.sprite.body) {
+            console.log('⚠️ Puffy not ready for jump');
+            return;
+        }
+        
+        console.log('🟠 Puffy is ready, attempting jump...');
+        
+        // TEMPORARY: Remove ground-touching requirement for testing
+        // if (this.puffy.sprite.body.touching.down || this.puffy.sprite.body.blocked.down) {
             this.puffy.sprite.body.setVelocityY(-250); // Strong jump
             this.puffy.playAnimation('walk_up');
             
-            console.log('🐱 Puffy jumping!');
+            console.log('🐱 Puffy jumping! Velocity set to -250');
             
             // Haptic feedback for jump (if supported)
             if ('vibrate' in navigator) {
                 navigator.vibrate(50);
             }
-        }
+        // } else {
+        //     console.log('⚠️ Puffy not on ground - cannot jump');
+        // }
     }
 
     startMovement(direction) {
