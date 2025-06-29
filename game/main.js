@@ -551,7 +551,7 @@ class GameScene extends Phaser.Scene {
         const giftImage = this.textures.get('gift').getSourceImage();
         const giftDisplayHeight = giftImage.height * giftScale;
         const block4Top = this.block4.y - 12; // block4 is 24px tall, so top is y-12
-        const giftY = block4Top - giftDisplayHeight / 2; // center so bottom touches platform
+        const giftY = block4Top - giftDisplayHeight / 2 + giftDisplayHeight * 0.10; // sink by 10%
         this.gift = this.add.image(width * 0.75, giftY, 'gift');
         this.gift.setScale(giftScale);
         this.physics.add.existing(this.gift, true); // STATIC body
@@ -654,81 +654,79 @@ class GameScene extends Phaser.Scene {
     }
 
     showBirthdayInvitation() {
-        // Only show invitation once
         if (this.invitationShown) return;
         this.invitationShown = true;
-
-        console.log('🎁 Puffy found the gift! Showing birthday invitation...');
-
-        // Pause the game physics
         this.physics.pause();
-
-        // Create overlay background with semi-transparent dark layer
         const { width, height } = this.cameras.main;
-        const overlayBg = this.add.rectangle(width * 0.5, height * 0.5, width, height, 0x000000, 0.7);
-        overlayBg.setDepth(100); // Ensure it's on top
-
-        // Add Puffy winks image as background decoration
-        const puffyWinks = this.add.image(width * 0.85, height * 0.8, 'puffy_winks');
-        puffyWinks.setScale(0.4); // Scale down to fit nicely
-        puffyWinks.setAlpha(0.6); // Semi-transparent for background effect
-        puffyWinks.setDepth(101);
-
-        // Create invitation text with cute styling
-        const invitationText = [
-            "🎉 You're invited to Puffy's Birthday! 🎉",
-            "",
-            "When: July 3rd 7pm-10pm",
-            "Where: Puffy's house!",
-            "What: Garden dinner + puffy's favorite movie!",
-            "",
-            "Can't wait to see you there! 🐱💕"
-        ];
-
-        // Add title with special styling
-        const titleText = this.add.text(width * 0.5, height * 0.25, "🎉 You're invited to Puffy's Birthday! 🎉", {
-            fontSize: '20px',
+        // Remove any old overlay
+        if (this.overlayScreen) {
+            Object.values(this.overlayScreen).forEach(element => {
+                if (element && element.destroy) element.destroy();
+            });
+        }
+        // Inject Google Fonts for Playfair Display
+        if (!document.getElementById('playfair-font')) {
+            const link = document.createElement('link');
+            link.id = 'playfair-font';
+            link.rel = 'stylesheet';
+            link.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap';
+            document.head.appendChild(link);
+        }
+        // Responsive overlay sizing
+        const overlayW = Math.min(width * 0.95, 400);
+        const overlayPad = width < 500 ? 18 : 40;
+        const overlayX = width / 2;
+        const overlayY = height / 2;
+        // Overlay background
+        const overlayBg = this.add.rectangle(overlayX, overlayY, overlayW, height < 500 ? 320 : 380, 0x000000, 0.85)
+            .setOrigin(0.5).setDepth(100).setStrokeStyle(0, 0x000000);
+        overlayBg.setRadius(32);
+        overlayBg.setShadow(8, 8, '#000', 0.5, true, true);
+        // Title
+        const titleFont = "32px 'Playfair Display', Georgia, serif";
+        const titleY = overlayY - (height < 500 ? 100 : 120) + overlayPad;
+        const title = this.add.text(overlayX, titleY, "You're invited to Puffy's Birthday", {
+            fontFamily: 'Playfair Display, Georgia, serif',
+            fontSize: width < 500 ? '20px' : '32px',
             color: '#FFD700',
-            align: 'center',
             fontStyle: 'bold',
+            align: 'center',
             stroke: '#8B4513',
-            strokeThickness: 2
+            strokeThickness: 3,
+            shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 4, fill: true },
+            wordWrap: { width: overlayW * 0.95, useAdvancedWrap: true },
+            fixedWidth: overlayW * 0.95
         }).setOrigin(0.5).setDepth(102);
-
-        // Add main invitation details
-        const detailsText = this.add.text(width * 0.5, height * 0.45, [
+        // Details
+        const detailsFont = "18px 'Playfair Display', Georgia, serif";
+        const detailsY = titleY + (width < 500 ? 44 : 60);
+        const detailsText = this.add.text(overlayX, detailsY, [
             "When: July 3rd 7pm-10pm",
-            "Where: Puffy's house!",
-            "What: Garden dinner + puffy's favorite movie!",
+            "Where: Puffy's house",
+            "What: Garden dinner + Puffy's favorite movie",
             "",
             "Can't wait to see you there! 🐱💕"
         ], {
-            fontSize: '16px',
+            fontFamily: 'Playfair Display, Georgia, serif',
+            fontSize: width < 500 ? '14px' : '18px',
             color: '#FFFFFF',
             align: 'center',
-            lineSpacing: 8,
-            backgroundColor: 'rgba(139, 69, 19, 0.8)',
-            padding: { x: 20, y: 15 }
+            lineSpacing: 10,
+            backgroundColor: 'rgba(139, 69, 19, 0.85)',
+            padding: { x: 18, y: 20 },
+            wordWrap: { width: overlayW * 0.95, useAdvancedWrap: true },
+            fixedWidth: overlayW * 0.95
         }).setOrigin(0.5).setDepth(102);
-
-        // Add close instruction
-        const closeText = this.add.text(width * 0.5, height * 0.75, "Tap anywhere to continue playing!", {
-            fontSize: '14px',
-            color: '#00FFFF',
-            align: 'center',
-            fontStyle: 'italic'
-        }).setOrigin(0.5).setDepth(102);
-
-        // Store overlay elements for cleanup
-        this.overlayScreen = {
-            background: overlayBg,
-            puffyWinks: puffyWinks,
-            title: titleText,
-            details: detailsText,
-            close: closeText
-        };
-
-        console.log('✅ Birthday invitation overlay displayed');
+        // Puffy image below
+        const puffyY = detailsY + (width < 500 ? 90 : 110);
+        const puffyW = width < 500 ? 90 : 140;
+        const puffy = this.add.image(overlayX, puffyY, 'puffy_winks');
+        puffy.setDisplaySize(puffyW, puffyW).setOrigin(0.5).setDepth(102);
+        puffy.setAlpha(1);
+        // Store overlay elements for cleanup (if needed)
+        this.overlayScreen = { background: overlayBg, title, details: detailsText, puffy };
+        // Overlay remains until refresh
+        console.log('✅ Birthday invitation overlay displayed (responsive, elegant)');
     }
 }
 
