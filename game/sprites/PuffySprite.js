@@ -21,6 +21,7 @@ class PuffySprite {
         
         // Ready state
         this.isReady = false;
+        this.spriteSheetReady = false;
         
         // Movement properties
         this.speed = 100; // pixels per second
@@ -110,9 +111,10 @@ class PuffySprite {
         // Set load completion handler
         this.scene.load.once('complete', () => {
             console.log('✅ Sprite sheet loaded successfully!');
-            this.createSprite();
+            // Don't create sprite immediately - let GameScene decide position
             this.setupAnimations();
             this.logFrameInfo();
+            this.markAsReadyForCreation();
         });
         
         // Set error handler
@@ -125,7 +127,7 @@ class PuffySprite {
         this.scene.load.start();
     }
     
-    createSprite() {
+    createSprite(x = null, y = null) {
         console.log('🎯 Creating Puffy sprite...');
         
         // Prevent duplicate sprite creation
@@ -134,10 +136,10 @@ class PuffySprite {
             return;
         }
         
-        // Create sprite at scene center initially (scene will position properly later)
-        const centerX = this.scene.cameras.main.width * 0.5;
-        const centerY = this.scene.cameras.main.height * 0.5;
-        this.sprite = this.scene.add.sprite(centerX, centerY, 'puffy_sprites', 0);
+        // Use provided position or default to (0, 0) - let GameScene handle positioning
+        const posX = x !== null ? x : 0;
+        const posY = y !== null ? y : 0;
+        this.sprite = this.scene.add.sprite(posX, posY, 'puffy_sprites', 0);
         
         // Set display size (spec: 48x48 pixels)
         this.sprite.setDisplaySize(this.displaySize, this.displaySize);
@@ -164,6 +166,12 @@ class PuffySprite {
         console.log(`🟢 PuffySprite is now READY for physics operations!`);
     }
     
+    markAsReadyForCreation() {
+        // Mark that sprite sheet is loaded and ready for sprite creation
+        this.spriteSheetReady = true;
+        console.log('✅ Sprite sheet ready for sprite creation');
+    }
+
     setupAnimations() {
         console.log('🎬 Setting up animations...');
         
@@ -186,11 +194,16 @@ class PuffySprite {
             console.log(`📝 Created animation '${animKey}': frames [${anim.frames.join(', ')}] @ ${frameRate}fps - ${anim.description}`);
         });
         
-        // Start with idle down animation
-        this.sprite.play('idle_down');
-        this.currentDirection = 'idle_down';
-        
         console.log('✅ All animations ready with natural walking speed!');
+    }
+
+    startInitialAnimation() {
+        if (this.sprite) {
+            // Start with idle down animation
+            this.sprite.play('idle_down');
+            this.currentDirection = 'idle_down';
+            console.log('🎬 Started initial idle_down animation');
+        }
     }
     
     logFrameInfo() {

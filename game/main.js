@@ -451,6 +451,7 @@ class GameScene extends Phaser.Scene {
         this.cursors = null;
         this.isMoving = false;
         this.currentDirection = 'down';
+        this.puffyCollisionsSetup = false; // Track collision setup
     }
 
     create() {
@@ -479,20 +480,26 @@ class GameScene extends Phaser.Scene {
     }
 
     setupPuffyWhenReady(width, height) {
-        // Check for Puffy readiness and set up positioning/collisions
+        // Check for Puffy sprite sheet readiness and create sprite
         const checkPuffyReady = () => {
-            if (this.puffy && this.puffy.isReady && this.puffy.sprite) {
-                console.log('✅ Puffy is ready! Setting up final positioning and collisions...');
+            if (this.puffy && this.puffy.spriteSheetReady && !this.puffy.sprite) {
+                console.log('✅ Puffy sprite sheet is ready! Creating sprite...');
                 
-                // Position Puffy on the ground level
-                this.puffy.sprite.setPosition(width * 0.3, height - 60);
+                // Create sprite at correct position
+                const targetX = width * 0.3;
+                const targetY = height - 60;
+                this.puffy.createSprite(targetX, targetY);
+                this.puffy.startInitialAnimation();
                 
-                // Set up collisions
-                this.physics.add.collider(this.puffy.sprite, this.ground);
-                this.physics.add.collider(this.puffy.sprite, this.block);
+                // Set up collisions (only once)
+                if (!this.puffyCollisionsSetup) {
+                    this.physics.add.collider(this.puffy.sprite, this.ground);
+                    this.physics.add.collider(this.puffy.sprite, this.block);
+                    this.puffyCollisionsSetup = true;
+                    console.log('✅ Puffy sprite created and collisions set up successfully');
+                }
                 
-                console.log('✅ Puffy positioned and collisions set up successfully');
-            } else {
+            } else if (!this.puffy || !this.puffy.spriteSheetReady) {
                 // Check again in 100ms if not ready yet
                 this.time.delayedCall(100, checkPuffyReady);
             }
