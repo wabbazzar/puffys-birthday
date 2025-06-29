@@ -674,18 +674,15 @@ class GameScene extends Phaser.Scene {
         }
         // Responsive overlay sizing
         const overlayW = Math.min(width * 0.95, 400);
-        const overlayPad = width < 500 ? 18 : 40;
-        const overlayX = width / 2;
-        const overlayY = height / 2;
+        const overlayH = height < 500 ? 340 : 400;
+        // Create a container to hold all overlay elements
+        const overlayContainer = this.add.container(width / 2, height / 2).setDepth(100);
         // Overlay background
-        const overlayBg = this.add.rectangle(overlayX, overlayY, overlayW, height < 500 ? 320 : 380, 0x000000, 0.85)
-            .setOrigin(0.5).setDepth(100).setStrokeStyle(0, 0x000000);
-        overlayBg.setRadius(32);
-        overlayBg.setShadow(8, 8, '#000', 0.5, true, true);
+        const overlayBg = this.add.rectangle(0, 0, overlayW, overlayH, 0x000000, 0.85)
+            .setOrigin(0.5).setStrokeStyle(2, 0xffffff);
+        overlayContainer.add(overlayBg);
         // Title
-        const titleFont = "32px 'Playfair Display', Georgia, serif";
-        const titleY = overlayY - (height < 500 ? 100 : 120) + overlayPad;
-        const title = this.add.text(overlayX, titleY, "You're invited to Puffy's Birthday", {
+        const title = this.add.text(0, 0, "You're invited to Puffy's Birthday", {
             fontFamily: 'Playfair Display, Georgia, serif',
             fontSize: width < 500 ? '20px' : '32px',
             color: '#FFD700',
@@ -696,11 +693,10 @@ class GameScene extends Phaser.Scene {
             shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 4, fill: true },
             wordWrap: { width: overlayW * 0.95, useAdvancedWrap: true },
             fixedWidth: overlayW * 0.95
-        }).setOrigin(0.5).setDepth(102);
+        }).setOrigin(0.5, 0);
+        overlayContainer.add(title);
         // Details
-        const detailsFont = "18px 'Playfair Display', Georgia, serif";
-        const detailsY = titleY + (width < 500 ? 44 : 60);
-        const detailsText = this.add.text(overlayX, detailsY, [
+        const detailsText = this.add.text(0, 0, [
             "When: July 3rd 7pm-10pm",
             "Where: Puffy's house",
             "What: Garden dinner + Puffy's favorite movie",
@@ -716,17 +712,24 @@ class GameScene extends Phaser.Scene {
             padding: { x: 18, y: 20 },
             wordWrap: { width: overlayW * 0.95, useAdvancedWrap: true },
             fixedWidth: overlayW * 0.95
-        }).setOrigin(0.5).setDepth(102);
-        // Puffy image below
-        const puffyY = detailsY + (width < 500 ? 90 : 110);
+        }).setOrigin(0.5, 0);
+        overlayContainer.add(detailsText);
+        // Puffy image
         const puffyW = width < 500 ? 90 : 140;
-        const puffy = this.add.image(overlayX, puffyY, 'puffy_winks');
-        puffy.setDisplaySize(puffyW, puffyW).setOrigin(0.5).setDepth(102);
-        puffy.setAlpha(1);
+        const puffy = this.add.image(0, 0, 'puffy_winks');
+        puffy.setDisplaySize(puffyW, puffyW).setOrigin(0.5, 0);
+        overlayContainer.add(puffy);
+        // Dynamically space elements vertically
+        let y = -overlayH / 2 + 32;
+        title.y = y;
+        y += title.height + 18;
+        detailsText.y = y;
+        y += detailsText.height + 18;
+        puffy.y = y;
         // Store overlay elements for cleanup (if needed)
-        this.overlayScreen = { background: overlayBg, title, details: detailsText, puffy };
+        this.overlayScreen = { container: overlayContainer, background: overlayBg, title, details: detailsText, puffy };
         // Overlay remains until refresh
-        console.log('✅ Birthday invitation overlay displayed (responsive, elegant)');
+        console.log('✅ Birthday invitation overlay displayed (container, no overlap)');
     }
 }
 
