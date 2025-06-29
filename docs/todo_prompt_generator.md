@@ -23,10 +23,28 @@ Optimize for 60 FPS on both desktop and mobile. Mobile performance requirements 
 ### 6. Browser Cache Awareness
 Always include cache-busting headers and version numbers. Test on both desktop and mobile browsers for cache consistency.
 
+### 7. Git-Driven Development Workflow
+Use git extensively throughout the development cycle. Commit early and often with descriptive messages. Create commits after each successful phase completion, before attempting new features, and when tests pass. Use git to track progress, enable rollbacks, and maintain development history.
+
 ## Structure of Generated Todo.md
 
+### Phase -1: Project Initialization & Development Environment
+**CRITICAL: DO THESE FIRST - BEFORE ANY OTHER WORK**
+
+1. **Cursor Rule Creation (MANDATORY)**
+   - Create a cursor rule that MUST be enabled at project start
+   - Rule should summarize all cross-platform development principles from this document
+   - Rule should remain active throughout entire development cycle
+   - Include mobile-first, git-driven, and PWA requirements in the rule
+
+2. **Makefile Generation (IMMEDIATE PRIORITY)**
+   - Generate Makefile with all cross-platform commands if not already present
+   - Populate with git workflow, testing, and development server commands
+   - Ensure mobile-ready server configuration (0.0.0.0 binding)
+   - Include all whitelisted commands from this document
+
 ### Phase 0: Cross-Platform Environment & Visual Test Infrastructure
-**ALWAYS START HERE - NO EXCEPTIONS**
+**ALWAYS START HERE AFTER INITIALIZATION - NO EXCEPTIONS**
 
 1. **Project Setup**
    - Directory structure
@@ -117,6 +135,45 @@ auto-test:
 # PWA testing
 pwa-test:
 	@open http://localhost:8000/pwa_test.html
+
+# kill existing servers and run
+force-serve:
+	@echo "Stopping any existing servers..."
+	@pkill -f "python.*http.server" || true
+	@sleep 1
+	@echo "Starting server on http://localhost:8000"
+	@echo "For mobile device testing, use your local IP address"
+	@python3 -m http.server 8000
+
+# Mobile device testing info
+device-test:
+	@echo "Connect mobile device and navigate to:"
+	@echo "http://$(shell ifconfig | grep 'inet ' | grep -v 127.0.0.1 | head -1 | awk '{print $$2}' || echo 'localhost'):8000/"
+	@echo ""
+	@echo "Mobile features:"
+	@echo "  • Touch controls + gesture recognition"
+	@echo "  • PWA installation support"
+	@echo "  • Offline gameplay capability"
+	@echo "  • Haptic feedback (where supported)"
+
+# Git workflow helpers
+git-init:
+	@git init
+	@git add -A
+	@git commit -m "Initial commit: Cross-platform project setup"
+
+git-phase:
+	@git add -A
+	@git status
+	@echo "Ready to commit phase completion. Use: git commit -m 'Phase X: Description'"
+
+git-checkpoint:
+	@git add -A
+	@git commit -m "Checkpoint: Working functionality before next feature"
+
+git-status:
+	@git status --short
+	@echo "Modified files ready for commit"
 ```
 
 ## Rules for Autonomous Cross-Platform Agent Behavior
@@ -182,6 +239,41 @@ After each implementation phase:
 6. Document platform-specific optimizations
 ```
 
+### RULE 7: Git Commit Protocol for Autonomous Development
+```
+Use git extensively throughout development:
+1. Initialize git repository at project start
+2. Commit after each successful phase completion
+3. Commit before attempting risky changes or new features
+4. Use descriptive commit messages that include phase number and feature
+5. Create commits when tests pass and functionality is verified
+6. Use git status to track progress and uncommitted changes
+7. Consider creating tags for major milestones
+8. Always commit working code before debugging sessions
+
+Example commit messages:
+- "Phase 0: Setup cross-platform test infrastructure and mobile viewport"
+- "Phase 1: Implement mobile-first touch controls with visual feedback"
+- "Phase 2: Add desktop keyboard enhancements and mouse interactions"
+- "Fix: Resolve mobile touch event handling on iOS Safari"
+```
+
+### RULE 8: Mandatory Cursor Rule and Makefile Initialization
+```
+AT PROJECT START (Phase -1), ALWAYS:
+1. Create cursor rule FIRST - before any code
+2. Generate/verify Makefile SECOND - before any implementation
+3. Enable cursor rule and keep active throughout project
+4. Cursor rule must contain essence of all cross-platform development rules
+5. Makefile must contain all whitelisted commands for autonomous development
+
+Cursor Rule Template:
+"Cross-Platform Web Development: Mobile-first implementation with desktop enhancement. 
+Use unified input methods for touch/mouse/keyboard. PWA features by default. 
+Git commits after each phase. 60 FPS performance on mobile. 44px+ touch targets. 
+Visual verification on mobile before desktop. Test harness creation mandatory."
+```
+
 ## Cross-Platform Implementation Phases
 
 ### Phase 0: Mobile-First Environment Setup
@@ -238,6 +330,14 @@ After each implementation phase:
 - PWA functionality for app-like experience
 - Comprehensive accessibility across platforms
 - Cache-busting for mobile and desktop browsers
+- Git-driven development with phase-based commits
+- Cursor rule active throughout development
+
+## Phase -1: Project Initialization & Development Environment
+### CRITICAL: DO THESE FIRST
+1. Create and enable cursor rule with cross-platform development principles
+2. Generate/verify Makefile with all whitelisted commands
+3. Initialize git repository and create initial commit
 
 ## Phase 0: Cross-Platform Environment Setup & Verification Tools
 [Always include mobile-first test harness with desktop enhancement]
@@ -422,6 +522,9 @@ Desktop Enhancement:
 
 ## Final Checklist for Generated Cross-Platform Todo.md
 
+- [ ] **Phase -1: Cursor rule creation and Makefile generation specified as first priority**
+- [ ] **Cursor rule template included with all cross-platform principles**
+- [ ] **Makefile requirements specified with all whitelisted commands**
 - [ ] Starts with mobile-first visual test infrastructure
 - [ ] Every feature tested on mobile before desktop
 - [ ] Includes unified input handling methods
@@ -434,6 +537,8 @@ Desktop Enhancement:
 - [ ] Cache-busting for mobile and desktop browsers
 - [ ] Cross-device testing procedures
 - [ ] Performance optimization for both platforms
+- [ ] Git workflow integration throughout all phases
+- [ ] Phase-based commit strategy clearly defined
 
 ## Agent Behavior Rules (Inject into Every Conversation)
 
@@ -449,6 +554,7 @@ cross_platform_development_rules:
   8_accessibility_universal: "WCAG compliance for mobile and desktop"
   9_offline_capable: "Service worker and local storage by default"
   10_cross_device_sync: "State persistence across platforms"
+  11_git_driven: "Use git extensively - commit after phases, before risks, when tests pass"
 
 makefile_whitelist_cross_platform:
   - make serve (mobile-ready with 0.0.0.0 binding)
@@ -461,8 +567,15 @@ makefile_whitelist_cross_platform:
   - make debug-render
   - make auto-test
   - make pwa-test
+  - make git-init
+  - make git-phase
+  - make git-checkpoint
+  - make git-status
 
 automatic_cross_platform_behaviors:
+  - **FIRST: Create cursor rule with cross-platform development principles**
+  - **SECOND: Generate/verify Makefile with all whitelisted commands**
+  - Git repository initialization and regular commits
   - Mobile viewport configuration in all HTML
   - Touch event handling alongside mouse/keyboard
   - Responsive CSS Grid/Flexbox layouts
@@ -472,17 +585,21 @@ automatic_cross_platform_behaviors:
   - Unified input method architecture
   - Mobile-first visual test creation
   - Cross-device compatibility testing
+  - Phase-based commit workflow with descriptive messages
+  - Progress tracking through git status and history
 ```
 
 ## Usage Instructions for Cross-Platform Generation
 
-1. **Read the spec.md thoroughly for both mobile and desktop opportunities**
-2. **Identify touch-first interaction patterns**
-3. **Create mobile-first phased implementation plan**
-4. **For each phase, create mobile visual test first, then desktop enhancement**
-5. **Include PWA features by default**
-6. **Add cross-platform debugging procedures**
-7. **Include performance verification for both platforms**
-8. **Generate comprehensive cross-platform todo.md**
+1. **MANDATORY FIRST STEP: Specify cursor rule creation and Makefile generation as Phase -1**
+2. **Read the spec.md thoroughly for both mobile and desktop opportunities**
+3. **Identify touch-first interaction patterns**
+4. **Create mobile-first phased implementation plan**
+5. **For each phase, create mobile visual test first, then desktop enhancement**
+6. **Include PWA features by default**
+7. **Add cross-platform debugging procedures**
+8. **Include performance verification for both platforms**
+9. **Integrate git workflow throughout all phases**
+10. **Generate comprehensive cross-platform todo.md**
 
 The resulting todo.md should enable fully autonomous development where the agent can build, test, and verify a complete cross-platform web application that works seamlessly on mobile devices and desktop browsers without human intervention, with mobile experience as the foundation and desktop as progressive enhancement. 

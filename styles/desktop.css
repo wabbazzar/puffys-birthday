@@ -1,13 +1,76 @@
 /* Desktop Enhancement CSS for Hop Hop Puff */
-/* Applied only on screens 1024px+ */
+/* Applied on screens 768px+ to match HTML media query */
 
 /* Desktop Layout Enhancements */
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
     
-    /* Enhanced Game Container */
-    #game-container {
+    /* Desktop game container layout */
+    .game-container {
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
         padding: 20px;
+        height: 100vh; /* Use regular vh on desktop */
+        gap: 20px;
+    }
+    
+    /* Hide mobile header on desktop */
+    .game-header {
+        display: none;
+    }
+    
+    /* Desktop game container */
+    #game-container {
+        width: 640px;  /* 2x mobile width for better desktop experience */
+        height: 480px; /* Maintain aspect ratio */
+        flex: none;
+        padding: 0;
         background: radial-gradient(ellipse at center, #2D1B69 0%, #1a0f3a 70%, #0d0520 100%);
+    }
+    
+    /* Show desktop UI */
+    #game-ui {
+        display: flex !important;
+        flex-direction: column;
+        gap: 20px;
+        min-width: 200px;
+        pointer-events: auto;
+    }
+    
+    #ui-top-bar {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px;
+        background: rgba(0, 255, 255, 0.1);
+        border-radius: 15px;
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Desktop UI text sizing */
+    #lives-display-desktop,
+    #score-display-desktop,
+    #timer-display-desktop {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    
+    #lives-display-desktop {
+        color: #ff6b6b;
+        text-shadow: 0 0 10px rgba(255, 107, 107, 0.8);
+    }
+    
+    #score-display-desktop {
+        color: #00ff00;
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+    }
+    
+    #timer-display-desktop {
+        color: #ffff00;
+        text-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
     }
     
     /* Hide mobile controls on desktop */
@@ -16,32 +79,21 @@
     }
     
     .desktop-only {
-        display: block;
-    }
-    
-    /* Enhanced UI for larger screens */
-    #ui-top-bar {
-        padding: 15px 25px;
-        backdrop-filter: blur(10px);
-        border-radius: 0 0 15px 15px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    }
-    
-    #lives-display,
-    #score-display,
-    #timer-display {
-        font-size: 1.2rem;
-        margin: 0 15px;
+        display: block !important;
     }
     
     /* Desktop Pause Button */
     #pause-btn {
-        padding: 10px 20px;
+        padding: 12px 20px;
         font-size: 16px;
         border-radius: 25px;
         background: linear-gradient(135deg, rgba(0, 255, 255, 0.3), rgba(0, 255, 255, 0.1));
+        border: 2px solid #00ffff;
+        color: #fff;
+        cursor: pointer;
         backdrop-filter: blur(5px);
         transition: all 0.2s ease;
+        margin-top: 10px;
     }
     
     #pause-btn:hover {
@@ -53,6 +105,46 @@
     #pause-btn:active {
         transform: translateY(0);
         box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+    }
+    
+    /* Keyboard Controls Info */
+    .controls-info {
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+        backdrop-filter: blur(5px);
+    }
+    
+    .controls-info h4 {
+        color: #00ffff;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        margin-bottom: 10px;
+        font-size: 16px;
+        text-align: center;
+    }
+    
+    .controls-info p {
+        color: #ffffff;
+        font-size: 14px;
+        margin: 8px 0;
+        opacity: 0.9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .controls-info .key {
+        color: #ffff00;
+        text-shadow: 0 0 5px rgba(255, 255, 0, 0.8);
+        font-weight: bold;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-family: monospace;
+        min-width: 50px;
+        text-align: center;
     }
     
     /* Enhanced Game Canvas */

@@ -12,7 +12,7 @@ class HopHopPuffGame {
         // Mobile-first configuration
         this.mobileConfig = {
             width: 320,        // iPhone base width from spec
-            height: 640,       // 2:1 ratio for kitchen climbing
+            height: 568,       // Adjusted for better mobile fit
             targetFPS: 60      // 60 FPS requirement
         };
         
@@ -431,39 +431,220 @@ class GameScene extends Phaser.Scene {
         // Desktop keyboard controls (WASD)
         this.cursors = this.input.keyboard.addKeys('W,S,A,D');
         
-        // Mobile virtual D-pad events
-        this.setupVirtualDPad();
-    }
-    
-    setupVirtualDPad() {
-        // Listen for virtual D-pad events from the HTML overlay
-        const dpadButtons = document.querySelectorAll('.dpad-btn');
+        // Mobile virtual joystick
+        this.setupVirtualJoystick();
+        this.setupJumpButton();
         
-        dpadButtons.forEach(btn => {
-            const direction = btn.dataset.direction;
-            
-            // Touch events
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                this.startMovement(direction);
-            }, { passive: false });
-            
-            btn.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                this.stopMovement();
-            }, { passive: false });
-            
-            // Mouse events for desktop testing
-            btn.addEventListener('mousedown', (e) => {
-                this.startMovement(direction);
-            });
-            
-            btn.addEventListener('mouseup', (e) => {
-                this.stopMovement();
-            });
-        });
+        // Initialize joystick state
+        this.joystickState = {
+            active: false,
+            x: 0,
+            y: 0,
+            centerX: 0,
+            centerY: 0,
+            maxDistance: 35 // Half of joystick base radius (60px)
+        };
     }
     
+    setupVirtualJoystick() {
+        const joystickBase = document.getElementById('joystick-base');
+        const joystickKnob = document.getElementById('joystick-knob');
+        
+        if (!joystickBase || !joystickKnob) {
+            console.log('⚠️ Virtual joystick elements not found');
+            return;
+        }
+        
+        // Get joystick center position
+        const updateJoystickCenter = () => {
+            const rect = joystickBase.getBoundingClientRect();
+            this.joystickState.centerX = rect.left + rect.width / 2;
+            this.joystickState.centerY = rect.top + rect.height / 2;
+        };
+        
+        updateJoystickCenter();
+        window.addEventListener('resize', updateJoystickCenter);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(updateJoystickCenter, 200);
+        });
+        
+        // Touch events for joystick
+        const handleTouchStart = (e) => {
+            e.preventDefault();
+            this.joystickState.active = true;
+            joystickKnob.classList.add('dragging');
+            updateJoystickCenter();
+            
+            console.log('🕹️ Joystick activated');
+        };
+        
+        const handleTouchMove = (e) => {
+            if (!this.joystickState.active) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - this.joystickState.centerX;
+            const deltaY = touch.clientY - this.joystickState.centerY;
+            
+            // Calculate distance from center
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            
+            // Limit to joystick bounds
+            const limitedDistance = Math.min(distance, this.joystickState.maxDistance);
+            const angle = Math.atan2(deltaY, deltaX);
+            
+            // Calculate final position
+            const finalX = Math.cos(angle) * limitedDistance;
+            const finalY = Math.sin(angle) * limitedDistance;
+            
+            // Update knob position
+            joystickKnob.style.transform = `translate(calc(-50% + ${finalX}px), calc(-50% + ${finalY}px))`;
+            
+            // Update joystick state (normalized -1 to 1)
+            this.joystickState.x = finalX / this.joystickState.maxDistance;
+            this.joystickState.y = finalY / this.joystickState.maxDistance;
+            
+            // Apply movement
+            this.handleJoystickMovement();
+        };
+        
+        const handleTouchEnd = (e) => {
+            e.preventDefault();
+            this.joystickState.active = false;
+            joystickKnob.classList.remove('dragging');
+            
+            // Reset knob position
+            joystickKnob.style.transform = 'translate(-50%, -50%)';
+            
+            // Reset joystick state
+            this.joystickState.x = 0;
+            this.joystickState.y = 0;
+            
+            // Stop movement
+            this.stopMovement();
+            
+            console.log('🕹️ Joystick deactivated');
+        };
+        
+        // Add touch event listeners
+        joystickKnob.addEventListener('touchstart', handleTouchStart, { passive: false });
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        document.addEventListener('touchend', handleTouchEnd, { passive: false });
+        
+        // Mouse events for desktop testing
+        joystickKnob.addEventListener('mousedown', handleTouchStart);
+        document.addEventListener('mousemove', (e) => {
+            if (!this.joystickState.active) return;
+            
+            const deltaX = e.clientX - this.joystickState.centerX;
+            const deltaY = e.clientY - this.joystickState.centerY;
+            
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            const limitedDistance = Math.min(distance, this.joystickState.maxDistance);
+            const angle = Math.atan2(deltaY, deltaX);
+            
+            const finalX = Math.cos(angle) * limitedDistance;
+            const finalY = Math.sin(angle) * limitedDistance;
+            
+            joystickKnob.style.transform = `translate(calc(-50% + ${finalX}px), calc(-50% + ${finalY}px))`;
+            
+            this.joystickState.x = finalX / this.joystickState.maxDistance;
+            this.joystickState.y = finalY / this.joystickState.maxDistance;
+            
+            this.handleJoystickMovement();
+        });
+        
+        document.addEventListener('mouseup', handleTouchEnd);
+        
+        console.log('🕹️ Virtual joystick setup complete');
+    }
+    
+    setupJumpButton() {
+        const jumpBtn = document.getElementById('jump-btn');
+        
+        if (!jumpBtn) {
+            console.log('⚠️ Jump button not found');
+            return;
+        }
+        
+        // Touch events
+        jumpBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            jumpBtn.classList.add('pressed');
+            this.handleJump();
+        }, { passive: false });
+        
+        jumpBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            jumpBtn.classList.remove('pressed');
+        }, { passive: false });
+        
+        // Mouse events for desktop testing
+        jumpBtn.addEventListener('mousedown', (e) => {
+            jumpBtn.classList.add('pressed');
+            this.handleJump();
+        });
+        
+        jumpBtn.addEventListener('mouseup', (e) => {
+            jumpBtn.classList.remove('pressed');
+        });
+        
+        console.log('⬆️ Jump button setup complete');
+    }
+    
+    handleJoystickMovement() {
+        if (!this.puffy || !this.puffy.sprite || !this.puffy.sprite.body) return;
+        
+        const speed = this.puffy.speed || 100;
+        const deadZone = 0.2; // Prevent tiny movements
+        
+        // Handle horizontal movement
+        if (Math.abs(this.joystickState.x) > deadZone) {
+            const velocityX = this.joystickState.x * speed;
+            this.puffy.sprite.body.setVelocityX(velocityX);
+            
+            // Set animation based on direction
+            if (this.joystickState.x < 0) {
+                this.puffy.playAnimation('walk_left');
+                this.currentDirection = 'left';
+            } else {
+                this.puffy.playAnimation('walk_right');
+                this.currentDirection = 'right';
+            }
+            
+            this.isMoving = true;
+        } else {
+            // Stop horizontal movement if joystick is centered
+            this.puffy.sprite.body.setVelocityX(0);
+            
+            if (this.isMoving) {
+                const lastDirection = this.currentDirection || 'down';
+                this.puffy.playAnimation(`idle_${lastDirection}`);
+                this.isMoving = false;
+            }
+        }
+        
+        // Note: Vertical movement (jumping) is handled by separate jump button
+        // This allows for more precise jump control while maintaining movement
+    }
+    
+    handleJump() {
+        if (!this.puffy || !this.puffy.sprite || !this.puffy.sprite.body) return;
+        
+        // Only jump if on ground or platform
+        if (this.puffy.sprite.body.touching.down || this.puffy.sprite.body.blocked.down) {
+            this.puffy.sprite.body.setVelocityY(-250); // Strong jump
+            this.puffy.playAnimation('walk_up');
+            
+            console.log('🐱 Puffy jumping!');
+            
+            // Haptic feedback for jump (if supported)
+            if ('vibrate' in navigator) {
+                navigator.vibrate(50);
+            }
+        }
+    }
+
     startMovement(direction) {
         if (!this.puffy || !this.puffy.sprite) return;
         
@@ -493,7 +674,7 @@ class GameScene extends Phaser.Scene {
                 break;
                 
             case 'up':
-                // Small jump
+                // Small jump for keyboard/legacy controls
                 if (this.puffy.sprite.body.touching.down) {
                     this.puffy.sprite.body.setVelocityY(-200);
                     this.puffy.playAnimation('walk_up');
@@ -523,17 +704,51 @@ class GameScene extends Phaser.Scene {
     }
     
     update() {
-        // Handle keyboard input (desktop)
-        if (this.cursors && this.cursors.W.isDown) {
-            this.startMovement('up');
-        } else if (this.cursors && this.cursors.S.isDown) {
-            this.startMovement('down');
-        } else if (this.cursors && this.cursors.A.isDown) {
-            this.startMovement('left');
+        // Handle keyboard input (desktop) with new joystick-style controls
+        if (!this.puffy || !this.puffy.sprite || !this.puffy.sprite.body) return;
+        
+        const speed = this.puffy.speed || 100;
+        let isMovingHorizontally = false;
+        
+        // Handle horizontal movement
+        if (this.cursors && this.cursors.A.isDown) {
+            this.puffy.sprite.body.setVelocityX(-speed);
+            this.puffy.playAnimation('walk_left');
+            this.currentDirection = 'left';
+            isMovingHorizontally = true;
         } else if (this.cursors && this.cursors.D.isDown) {
-            this.startMovement('right');
-        } else if (this.isMoving) {
-            this.stopMovement();
+            this.puffy.sprite.body.setVelocityX(speed);
+            this.puffy.playAnimation('walk_right');
+            this.currentDirection = 'right';
+            isMovingHorizontally = true;
+        } else {
+            // Stop horizontal movement if no keys pressed
+            this.puffy.sprite.body.setVelocityX(0);
+            
+            if (this.isMoving && !isMovingHorizontally) {
+                const lastDirection = this.currentDirection || 'down';
+                this.puffy.playAnimation(`idle_${lastDirection}`);
+            }
+        }
+        
+        // Handle jump (W key)
+        if (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.W)) {
+            this.handleJump();
+        }
+        
+        // Handle down movement (S key) - just animation for now
+        if (this.cursors && this.cursors.S.isDown) {
+            this.puffy.playAnimation('walk_down');
+            this.currentDirection = 'down';
+        }
+        
+        // Update movement state
+        this.isMoving = isMovingHorizontally;
+        
+        // Pause functionality (P key)
+        if (this.cursors && Phaser.Input.Keyboard.JustDown(this.input.keyboard.addKey('P'))) {
+            this.scene.pause();
+            this.scene.launch('PauseScene');
         }
     }
 }
