@@ -130,7 +130,9 @@ class WorkingJoystick {
     }
 
     controlPuffy() {
-        if (!this.gameScene || !this.gameScene.puffy || !this.gameScene.puffy.sprite) return;
+        // Dynamically get game scene reference
+        const gameScene = this.gameScene || window.game?.game?.scene?.getScene('GameScene');
+        if (!gameScene || !gameScene.puffy || !gameScene.puffy.sprite) return;
 
         const diff = this.pos.sub(this.origin);
         const normalizedX = diff.x / this.radius;
@@ -139,26 +141,26 @@ class WorkingJoystick {
 
         // Handle horizontal movement
         if (Math.abs(normalizedX) > deadZone) {
-            const speed = this.gameScene.puffy.speed || 100;
+            const speed = gameScene.puffy.speed || 100;
             const velocityX = normalizedX * speed;
-            this.gameScene.puffy.sprite.body.setVelocityX(velocityX);
+            gameScene.puffy.sprite.body.setVelocityX(velocityX);
 
             // Set animation based on direction
             if (normalizedX < 0) {
-                this.gameScene.puffy.playAnimation('walk_left');
-                this.gameScene.currentDirection = 'left';
+                gameScene.puffy.playAnimation('walk_left');
+                gameScene.currentDirection = 'left';
             } else {
-                this.gameScene.puffy.playAnimation('walk_right');
-                this.gameScene.currentDirection = 'right';
+                gameScene.puffy.playAnimation('walk_right');
+                gameScene.currentDirection = 'right';
             }
-            this.gameScene.isMoving = true;
+            gameScene.isMoving = true;
         } else {
             // Stop horizontal movement
-            this.gameScene.puffy.sprite.body.setVelocityX(0);
-            if (this.gameScene.isMoving) {
-                const lastDirection = this.gameScene.currentDirection || 'down';
-                this.gameScene.puffy.playAnimation(`idle_${lastDirection}`);
-                this.gameScene.isMoving = false;
+            gameScene.puffy.sprite.body.setVelocityX(0);
+            if (gameScene.isMoving) {
+                const lastDirection = gameScene.currentDirection || 'down';
+                gameScene.puffy.playAnimation(`idle_${lastDirection}`);
+                gameScene.isMoving = false;
             }
         }
     }
@@ -207,12 +209,14 @@ class WorkingJumpButton {
     }
 
     jump() {
-        if (!this.gameScene || !this.gameScene.puffy || !this.gameScene.puffy.sprite) return;
+        // Dynamically get game scene reference
+        const gameScene = this.gameScene || window.game?.game?.scene?.getScene('GameScene');
+        if (!gameScene || !gameScene.puffy || !gameScene.puffy.sprite) return;
 
         // Jump if on ground or platform
-        if (this.gameScene.puffy.sprite.body.touching.down || this.gameScene.puffy.sprite.body.blocked.down) {
-            this.gameScene.puffy.sprite.body.setVelocityY(-250);
-            this.gameScene.puffy.playAnimation('walk_up');
+        if (gameScene.puffy.sprite.body.touching.down || gameScene.puffy.sprite.body.blocked.down) {
+            gameScene.puffy.sprite.body.setVelocityY(-250);
+            gameScene.puffy.playAnimation('walk_up');
         }
     }
 
@@ -358,16 +362,62 @@ class HopHopPuffGame {
     }
     
     hideLoadingScreen() {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-            loadingScreen.style.opacity = '0';
-            loadingScreen.style.transition = 'opacity 0.5s ease';
-            
+        if (this.loadingScreen) {
+            this.loadingScreen.classList.add('fade-out');
             setTimeout(() => {
-                loadingScreen.style.display = 'none';
-                this.isLoading = false;
-                console.log('🎮 Game ready for mobile and desktop play!');
+                this.loadingScreen.style.display = 'none';
+                // Create initial mobile controls display (will be updated when game scene starts)
+                if (this.isMobile) {
+                    console.log('📱 Loading complete - setting up mobile controls...');
+                    this.createMobileControls();
+                }
             }, 500);
+        }
+    }
+
+    createMobileControls() {
+        if (!this.isMobile || !this.controlsCanvas) return;
+
+        const canvas = this.controlsCanvas;
+        const joystickX = 100;
+        const joystickY = canvas.height - 100;
+        const jumpX = canvas.width - 100;
+        const jumpY = canvas.height - 100;
+
+        // Get reference to game scene for control
+        const gameScene = this.game?.scene?.getScene('GameScene');
+        
+        console.log('🕹️ Creating mobile controls for game scene:', gameScene);
+        
+        this.joystick = new WorkingJoystick(joystickX, joystickY, 60, 30, gameScene);
+        this.jumpButton = new WorkingJumpButton(jumpX, jumpY, 40, gameScene);
+
+        // Start render loop for controls
+        this.renderControls();
+    }
+
+    renderControls() {
+        if (!this.isMobile || !this.controlsContext) return;
+
+        const render = () => {
+            // Clear canvas
+            this.controlsContext.clearRect(0, 0, this.controlsCanvas.width, this.controlsCanvas.height);
+            
+            // Update and draw controls
+            if (this.joystick) this.joystick.update(this.controlsContext);
+            if (this.jumpButton) this.jumpButton.update(this.controlsContext);
+            
+            requestAnimationFrame(render);
+        };
+        
+        render();
+    }
+
+    // Method to recreate controls when game scene is ready
+    refreshMobileControls() {
+        if (this.isMobile) {
+            console.log('🔄 Refreshing mobile controls...');
+            this.createMobileControls();
         }
     }
 }
@@ -536,65 +586,22 @@ class GameScene extends Phaser.Scene {
     }
     
     create() {
-        console.log('🎮 Basic Movement Scene: Just Puffy walking around...');
-        
-        const width = this.cameras.main.width;
-        const height = this.cameras.main.height;
-        
-        // Set scene background
-        this.cameras.main.setBackgroundColor('#87CEEB'); // Sky blue
-        
-        // Create simple ground
-        this.ground = this.add.rectangle(width * 0.5, height - 20, width, 40, 0x8b4513);
-        this.ground.setStrokeStyle(2, 0x654321);
-        this.physics.add.existing(this.ground, true); // Static body
-        
-        // Initialize blocks group for collision detection
-        this.blocks = this.physics.add.staticGroup();
-        
-        // Create some test blocks to demonstrate functionality
-        this.createTestBlocks(width, height);
-        
-        // Create Puffy sprite
-        console.log('🐱 Creating Puffy sprite...');
-        this.puffy = new PuffySprite(this);
-        
-        // Set up Puffy positioning and controls immediately after creation
+        const { width, height } = this.cameras.main;
+        console.log(`🎮 Game scene created - ${width}x${height}`);
+
+        this.startTime = Date.now();
+        this.setupGameElements(width, height);
         this.setupPuffyWhenReady(width, height);
-        
-        // Add simple UI text
-        this.add.text(width * 0.5, 30, 'Hop Hop Puff - Basic Movement', {
-            fontSize: '24px',
-            color: '#000080',
-            align: 'center',
-            fontWeight: 'bold'
-        }).setOrigin(0.5);
-        
-        this.add.text(width * 0.5, 60, 'Use WASD or virtual D-pad to move around', {
-            fontSize: '16px',
-            color: '#000080',
-            align: 'center'
-        }).setOrigin(0.5);
-        
-        this.add.text(width * 0.5, 80, '🧱 Jump on blocks and platforms! 🧱', {
-            fontSize: '14px',
-            color: '#8B4513',
-            align: 'center'
-        }).setOrigin(0.5);
-        
-        // Back to menu button
-        const backButton = this.add.text(width * 0.5, height * 0.05, '← Menu', {
-            fontSize: '12px',
-            color: '#ffffff',
-            backgroundColor: '#666666',
-            padding: { x: 8, y: 4 },
-            align: 'center'
-        }).setOrigin(0.5);
-        
-        backButton.setInteractive({ useHandCursor: true });
-        backButton.on('pointerdown', () => {
-            this.scene.start('MainMenuScene');
-        });
+        this.setupKeyboardControls();
+        this.updateUI();
+
+        // Create mobile controls now that game scene is ready
+        if (window.game && window.game.isMobile) {
+            console.log('🕹️ Game scene ready - creating mobile controls...');
+            setTimeout(() => {
+                window.game.refreshMobileControls();
+            }, 500); // Small delay to ensure everything is initialized
+        }
     }
 
     setupPuffyWhenReady(width, height) {
