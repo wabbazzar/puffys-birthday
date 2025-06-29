@@ -40,6 +40,8 @@ class WorkingJoystick {
         this.ondrag = false;
         this.touchPos = new Vector2(0, 0);
         this.gameScene = gameScene;
+        this.lastJumpTime = 0;
+        this.jumpCooldown = 300; // 300ms cooldown between jumps
         this.listener();
     }
 
@@ -94,11 +96,20 @@ class WorkingJoystick {
     }
 
     draw(context) {
-        // Draw joystick base (cyan with glow)
-        context.shadowColor = '#00ffff';
-        context.shadowBlur = 20;
+        // Check if we're in jump zone (upward movement)
+        const diff = this.pos.sub(this.origin);
+        const normalizedY = -diff.y / this.radius;
+        const deadZone = 0.2;
+        const inJumpZone = normalizedY > deadZone;
+
+        // Draw joystick base with dynamic color based on jump zone
+        const baseColor = inJumpZone ? '#ff6600' : '#00ffff'; // Orange when jumping, cyan normally
+        const baseFill = inJumpZone ? 'rgba(255, 102, 0, 0.4)' : 'rgba(0, 255, 255, 0.3)';
+        
+        context.shadowColor = baseColor;
+        context.shadowBlur = inJumpZone ? 25 : 20;
         context.beginPath();
-        context.fillStyle = 'rgba(0, 255, 255, 0.3)';
+        context.fillStyle = baseFill;
         context.arc(this.origin.x, this.origin.y, this.radius, 0, Math.PI * 2);
         context.fill();
         context.closePath();
@@ -106,16 +117,17 @@ class WorkingJoystick {
         // Draw joystick border
         context.shadowBlur = 0;
         context.beginPath();
-        context.strokeStyle = '#00ffff';
+        context.strokeStyle = baseColor;
         context.lineWidth = 3;
         context.arc(this.origin.x, this.origin.y, this.radius, 0, Math.PI * 2);
         context.stroke();
 
-        // Draw joystick handle (white)
-        context.shadowColor = '#ffffff';
+        // Draw joystick handle (white, with orange tint when jumping)
+        const handleColor = inJumpZone ? '#ffaa77' : '#ffffff';
+        context.shadowColor = handleColor;
         context.shadowBlur = 10;
         context.beginPath();
-        context.fillStyle = '#ffffff';
+        context.fillStyle = handleColor;
         context.arc(this.pos.x, this.pos.y, this.handleRadius, 0, Math.PI * 2);
         context.fill();
         context.closePath();
@@ -135,15 +147,49 @@ class WorkingJoystick {
 
         const diff = this.pos.sub(this.origin);
         const normalizedX = diff.x / this.radius;
+        const normalizedY = -diff.y / this.radius; // Negative because Y increases downward
         const deadZone = 0.2;
+
+        let isMovingHorizontally = false;
+        let isMovingVertically = false;
 
         // Handle horizontal movement
         if (Math.abs(normalizedX) > deadZone) {
             const speed = 120;
             const velocityX = normalizedX * speed;
             gameScene.puffy.sprite.body.setVelocityX(velocityX);
+            isMovingHorizontally = true;
+        } else {
+            // Stop horizontal movement
+            gameScene.puffy.sprite.body.setVelocityX(0);
+        }
 
-            // Set animation based on direction
+        // Handle vertical movement (jumping)
+        if (normalizedY > deadZone) {
+            // Upward movement triggers jumping with cooldown
+            const currentTime = Date.now();
+            const canJump = gameScene.puffy.sprite.body.touching.down || gameScene.puffy.sprite.body.blocked.down;
+            const cooldownPassed = (currentTime - this.lastJumpTime) > this.jumpCooldown;
+            
+            if (canJump && cooldownPassed) {
+                gameScene.puffy.sprite.body.setVelocityY(-300);
+                this.lastJumpTime = currentTime;
+                isMovingVertically = true;
+                
+                // Add haptic feedback for joystick jumping
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(40);
+                }
+            }
+        }
+
+        // Set animation based on movement direction
+        if (isMovingVertically) {
+            // Jumping animation takes priority
+            gameScene.puffy.playAnimation('walk_up');
+            gameScene.currentDirection = 'up';
+        } else if (isMovingHorizontally) {
+            // Horizontal movement animations
             if (normalizedX < 0) {
                 gameScene.puffy.playAnimation('walk_left');
                 gameScene.currentDirection = 'left';
@@ -151,16 +197,14 @@ class WorkingJoystick {
                 gameScene.puffy.playAnimation('walk_right');
                 gameScene.currentDirection = 'right';
             }
-            gameScene.isMoving = true;
-        } else {
-            // Stop horizontal movement
-            gameScene.puffy.sprite.body.setVelocityX(0);
-            if (gameScene.isMoving) {
-                const lastDirection = gameScene.currentDirection || 'down';
-                gameScene.puffy.playAnimation(`idle_${lastDirection}`);
-                gameScene.isMoving = false;
-            }
+        } else if (gameScene.isMoving) {
+            // Stop animation and return to idle
+            const lastDirection = gameScene.currentDirection || 'down';
+            gameScene.puffy.playAnimation(`idle_${lastDirection}`);
         }
+
+        // Update movement state
+        gameScene.isMoving = isMovingHorizontally || isMovingVertically;
     }
 }
 
