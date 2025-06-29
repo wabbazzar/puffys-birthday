@@ -545,11 +545,17 @@ class GameScene extends Phaser.Scene {
         this.physics.add.existing(this.block4, true);
         this.platforms.add(this.block4);
 
-        // Add birthday gift on top platform (Level 4) - Following Phaser.js Framework Priority (Rule 3)
-        this.gift = this.add.image(width * 0.75, height - 240, 'gift');
-        this.gift.setScale(0.5); // Scale down to fit nicely on platform
-        this.physics.add.existing(this.gift, false); // Dynamic body for collision detection
-        this.gift.body.setSize(24, 24); // Set collision box size
+        // Add birthday gift on top platform (Level 4)
+        // Make the gift much smaller and align its bottom with the top of the platform
+        const giftScale = 0.1;
+        const giftImage = this.textures.get('gift').getSourceImage();
+        const giftDisplayHeight = giftImage.height * giftScale;
+        const block4Top = this.block4.y - 12; // block4 is 24px tall, so top is y-12
+        const giftY = block4Top - giftDisplayHeight / 2; // center so bottom touches platform
+        this.gift = this.add.image(width * 0.75, giftY, 'gift');
+        this.gift.setScale(giftScale);
+        this.physics.add.existing(this.gift, true); // STATIC body
+        this.gift.body.setSize(giftDisplayHeight, giftDisplayHeight); // collision box matches display size
 
         // Create Puffy and set up collision checking
         this.puffy = new PuffySprite(this);
@@ -601,6 +607,7 @@ class GameScene extends Phaser.Scene {
 
     update() {
         if (!this.puffy || !this.puffy.sprite) return;
+        if (!this.puffy.isReady) return; // Block input/physics until Puffy is fully ready
         
         const speed = 120;
         let isMovingHorizontally = false;
@@ -721,43 +728,7 @@ class GameScene extends Phaser.Scene {
             close: closeText
         };
 
-        // Make overlay clickable to close - Following Phaser.js Framework Priority (Rule 3)
-        overlayBg.setInteractive();
-        overlayBg.on('pointerdown', () => {
-            this.closeBirthdayInvitation();
-        });
-
-        // Also allow keyboard/mobile controls to close
-        this.input.keyboard.once('keydown', () => {
-            this.closeBirthdayInvitation();
-        });
-
         console.log('✅ Birthday invitation overlay displayed');
-    }
-
-    closeBirthdayInvitation() {
-        console.log('🎮 Closing birthday invitation, resuming game...');
-
-        // Remove overlay elements
-        if (this.overlayScreen) {
-            Object.values(this.overlayScreen).forEach(element => {
-                if (element && element.destroy) {
-                    element.destroy();
-                }
-            });
-            this.overlayScreen = null;
-        }
-
-        // Remove the gift (it's been collected)
-        if (this.gift) {
-            this.gift.destroy();
-            this.gift = null;
-        }
-
-        // Resume game physics
-        this.physics.resume();
-
-        console.log('✅ Game resumed after birthday invitation');
     }
 }
 
