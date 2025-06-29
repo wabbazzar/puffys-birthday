@@ -447,11 +447,20 @@ class GameScene extends Phaser.Scene {
     }
     
     setupVirtualJoystick() {
+        console.log('🔍 Setting up virtual joystick...');
+        
         const joystickBase = document.getElementById('joystick-base');
         const joystickKnob = document.getElementById('joystick-knob');
         
+        console.log('🔍 Joystick base element:', joystickBase);
+        console.log('🔍 Joystick knob element:', joystickKnob);
+        
         if (!joystickBase || !joystickKnob) {
-            console.log('⚠️ Virtual joystick elements not found');
+            console.log('⚠️ Virtual joystick elements not found, retrying in 500ms...');
+            // Retry after a delay to ensure DOM is fully loaded
+            setTimeout(() => {
+                this.setupVirtualJoystick();
+            }, 500);
             return;
         }
         
@@ -475,7 +484,32 @@ class GameScene extends Phaser.Scene {
             joystickKnob.classList.add('dragging');
             updateJoystickCenter();
             
-            console.log('🕹️ Joystick activated');
+            // Immediately position knob at touch location
+            const touch = e.touches ? e.touches[0] : e;
+            const deltaX = touch.clientX - this.joystickState.centerX;
+            const deltaY = touch.clientY - this.joystickState.centerY;
+            
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            const limitedDistance = Math.min(distance, this.joystickState.maxDistance);
+            const angle = Math.atan2(deltaY, deltaX);
+            
+            const finalX = Math.cos(angle) * limitedDistance;
+            const finalY = Math.sin(angle) * limitedDistance;
+            
+            joystickKnob.style.transform = `translate(calc(-50% + ${finalX}px), calc(-50% + ${finalY}px))`;
+            
+            this.joystickState.x = finalX / this.joystickState.maxDistance;
+            this.joystickState.y = finalY / this.joystickState.maxDistance;
+            
+            // Apply movement immediately
+            this.handleJoystickMovement();
+            
+            // Add haptic feedback
+            if ('vibrate' in navigator) {
+                navigator.vibrate(30);
+            }
+            
+            console.log('🕹️ Joystick activated - touch detected!');
         };
         
         const handleTouchMove = (e) => {
@@ -526,13 +560,13 @@ class GameScene extends Phaser.Scene {
             console.log('🕹️ Joystick deactivated');
         };
         
-        // Add touch event listeners
-        joystickKnob.addEventListener('touchstart', handleTouchStart, { passive: false });
+        // Add touch event listeners to the BASE (larger touch area), not just the knob
+        joystickBase.addEventListener('touchstart', handleTouchStart, { passive: false });
         document.addEventListener('touchmove', handleTouchMove, { passive: false });
         document.addEventListener('touchend', handleTouchEnd, { passive: false });
         
-        // Mouse events for desktop testing
-        joystickKnob.addEventListener('mousedown', handleTouchStart);
+        // Mouse events for desktop testing - also attach to base for larger click area
+        joystickBase.addEventListener('mousedown', handleTouchStart);
         document.addEventListener('mousemove', (e) => {
             if (!this.joystickState.active) return;
             
@@ -560,10 +594,18 @@ class GameScene extends Phaser.Scene {
     }
     
     setupJumpButton() {
+        console.log('🔍 Setting up jump button...');
+        
         const jumpBtn = document.getElementById('jump-btn');
         
+        console.log('🔍 Jump button element:', jumpBtn);
+        
         if (!jumpBtn) {
-            console.log('⚠️ Jump button not found');
+            console.log('⚠️ Jump button not found, retrying in 500ms...');
+            // Retry after a delay to ensure DOM is fully loaded
+            setTimeout(() => {
+                this.setupJumpButton();
+            }, 500);
             return;
         }
         
@@ -593,10 +635,15 @@ class GameScene extends Phaser.Scene {
     }
     
     handleJoystickMovement() {
-        if (!this.puffy || !this.puffy.sprite || !this.puffy.sprite.body) return;
+        if (!this.puffy || !this.puffy.sprite || !this.puffy.sprite.body) {
+            console.log('⚠️ Puffy not ready for joystick movement');
+            return;
+        }
         
         const speed = this.puffy.speed || 100;
         const deadZone = 0.2; // Prevent tiny movements
+        
+        console.log('🕹️ Joystick movement:', this.joystickState.x.toFixed(2), this.joystickState.y.toFixed(2));
         
         // Handle horizontal movement
         if (Math.abs(this.joystickState.x) > deadZone) {
