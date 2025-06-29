@@ -1,15 +1,14 @@
-127.0.0.1 - - [29/Jun/2025 11:26:27] code 404, message File not found
-127.0.0.1 - - [29/Jun/2025 11:26:27] "GET /favicon.ico HTTP/1.1" 404 -
-127.0.0.1 - - [29/Jun/2025 11:26:28] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [29/Jun/2025 11:26:28] "GET /styles/mobile.css HTTP/1.1" 200 -
-127.0.0.1 - - [29/Jun/2025 11:26:28] "GET /game/sprites/PuffySprite.js HTTP/1.1" 200 -
-127.0.0.1 - - [29/Jun/2025 11:26:28] "GET /game/main.js HTTP/1.1" 200 -
-127.0.0.1 - - [29/Jun/2025 11:26:28] "GET /styles/desktop.css HTTP/1.1" 200 -
-127.0.0.1 - - [29/Jun/2025 11:26:28] "GET /assets/puffy_4_by_4.png?t=1751214388678 HTTP/1.1" 200 -
-127.0.0.1 - - [29/Jun/2025 11:26:28] "GET /assets/puffy_4_by_4.png HTTP/1.1" 200 -
-127.0.0.1 - - [29/Jun/2025 11:26:28] code 404, message File not found
-127.0.0.1 - - [29/Jun/2025 11:26:28] "GET /favicon.ico HTTP/1.1" 404 -
-127.0.0.1 - - [29/Jun/2025 11:26:28] code 404, message File not found
-127.0.0.1 - - [29/Jun/2025 11:26:28] "GET /manifest.json HTTP/1.1" 404 -
-127.0.0.1 - - [29/Jun/2025 11:26:28] code 404, message File not found
-127.0.0.1 - - [29/Jun/2025 11:26:28] "GET /sw.js HTTP/1.1" 404 -
+127.0.0.1 - - [29/Jun/2025 11:32:02] code 404, message File not found
+127.0.0.1 - - [29/Jun/2025 11:32:02] "GET /sw.js HTTP/1.1" 404 -
+127.0.0.1 - - [29/Jun/2025 11:32:03] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Jun/2025 11:32:03] "GET /styles/mobile.css HTTP/1.1" 200 -
+127.0.0.1 - - [29/Jun/2025 11:32:03] "GET /styles/desktop.css HTTP/1.1" 200 -
+127.0.0.1 - - [29/Jun/2025 11:32:03] "GET /game/sprites/PuffySprite.js HTTP/1.1" 200 -
+127.0.0.1 - - [29/Jun/2025 11:32:03] "GET /game/main.js HTTP/1.1" 200 -
+127.0.0.1 - - [29/Jun/2025 11:32:03] "GET /assets/puffy_4_by_4.png?t=1751214723645 HTTP/1.1" 200 -
+127.0.0.1 - - [29/Jun/2025 11:32:03] "GET /assets/puffy_4_by_4.png?t=1751214723644 HTTP/1.1" 200 -
+127.0.0.1 - - [29/Jun/2025 11:32:03] "GET /assets/puffy_4_by_4.png HTTP/1.1" 200 -
+127.0.0.1 - - [29/Jun/2025 11:32:03] code 404, message File not found
+127.0.0.1 - - [29/Jun/2025 11:32:03] "GET /manifest.json HTTP/1.1" 404 -
+127.0.0.1 - - [29/Jun/2025 11:32:03] code 404, message File not found
+127.0.0.1 - - [29/Jun/2025 11:32:03] "GET /favicon.ico HTTP/1.1" 404 -

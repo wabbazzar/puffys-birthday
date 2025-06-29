@@ -1,4 +1,4 @@
-.PHONY: serve game-test mobile-test visual-test touch-test sprite-test device-test verify-render clean-cache debug-render auto-test pwa-test
+.PHONY: serve game-test mobile-test visual-test touch-test sprite-test device-test verify-render clean-cache debug-render auto-test pwa-test start-server stop-server test-game check-logs full-test
 
 # Mobile-ready game server
 serve:
@@ -6,6 +6,39 @@ serve:
 	@echo "📱 Mobile: Connect device and navigate to http://[your-ip]:8000/"
 	@echo "💻 Desktop: http://localhost:8000/"
 	@python3 -m http.server 8000 --bind 0.0.0.0 || python -m SimpleHTTPServer 8000
+
+# Autonomous testing server management
+start-server:
+	@echo "🚀 Starting development server in background with logging..."
+	@lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+	@python3 -m http.server 8000 --bind 0.0.0.0 > server.log 2>&1 &
+	@sleep 2
+	@echo "✅ Server started on http://localhost:8000"
+	@echo "📊 Logs available: make check-logs"
+
+stop-server:
+	@echo "🛑 Stopping development server..."
+	@lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+	@echo "✅ Server stopped"
+
+test-game:
+	@echo "🎮 Opening game for testing (follows Rule 0: MANDATORY TESTING PROTOCOL)..."
+	@open http://localhost:8000 || xdg-open http://localhost:8000 || echo "Navigate to: http://localhost:8000"
+
+check-logs:
+	@echo "📊 Server logs (last 10 lines):"
+	@tail -10 server.log 2>/dev/null || echo "No server.log found. Use 'make start-server' first."
+
+full-test: start-server test-game
+	@echo "🧪 Full autonomous testing protocol:"
+	@echo "   ✅ Server started with logging"
+	@echo "   ✅ Game opened for testing"
+	@echo "   📱 Test mobile view with browser dev tools"
+	@echo "   💻 Test desktop view with keyboard controls"
+	@echo ""
+	@echo "Next steps:"
+	@echo "   make check-logs  # Check server activity"
+	@echo "   make stop-server # Stop when done"
 
 # Cross-platform game testing
 game-test:
@@ -137,6 +170,11 @@ help:
 	@echo ""
 	@echo "Development Server:"
 	@echo "  make serve         Start mobile-ready development server on port 8000"
+	@echo "  make start-server  Start server in background with logging (autonomous testing)"
+	@echo "  make stop-server   Stop background server"
+	@echo "  make test-game     Open game for testing (Rule 0 compliance)"
+	@echo "  make check-logs    View server activity logs"
+	@echo "  make full-test     Complete autonomous testing workflow"
 	@echo ""
 	@echo "Testing Commands:"
 	@echo "  make game-test     Open main game (index.html)"
