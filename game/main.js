@@ -30,190 +30,14 @@ class Vector2 {
 }
 
 // Working Joystick class (canvas-based)
-class WorkingJoystick {
-    constructor(x, y, radius, handleRadius, gameScene) {
-        this.pos = new Vector2(x, y);
-        this.origin = new Vector2(x, y);
-        this.radius = radius;
-        this.handleRadius = handleRadius;
-        this.handleFriction = 0.25;
-        this.ondrag = false;
-        this.touchPos = new Vector2(0, 0);
-        this.gameScene = gameScene;
-        this.lastJumpTime = 0;
-        this.jumpCooldown = 300; // 300ms cooldown between jumps
-        this.listener();
-    }
-
-    listener() {
-        // Touch Events
-        addEventListener('touchstart', e => {
-            e.preventDefault();
-            this.touchPos = new Vector2(e.touches[0].pageX, e.touches[0].pageY);
-            if (this.touchPos.sub(this.origin).mag() <= this.radius) {
-                this.ondrag = true;
-                if ('vibrate' in navigator) {
-                    navigator.vibrate(30);
-                }
-            }
-        }, { passive: false });
-
-        addEventListener('touchend', e => {
-            e.preventDefault();
-            this.ondrag = false;
-        }, { passive: false });
-
-        addEventListener('touchmove', e => {
-            e.preventDefault();
-            this.touchPos = new Vector2(e.touches[0].pageX, e.touches[0].pageY);
-        }, { passive: false });
-
-        // Mouse Events for desktop
-        addEventListener('mousedown', e => {
-            this.touchPos = new Vector2(e.pageX, e.pageY);
-            if (this.touchPos.sub(this.origin).mag() <= this.radius) {
-                this.ondrag = true;
-            }
-        });
-
-        addEventListener('mouseup', () => {
-            this.ondrag = false;
-        });
-
-        addEventListener('mousemove', e => {
-            this.touchPos = new Vector2(e.pageX, e.pageY);
-        });
-    }
-
-    reposition() {
-        if (!this.ondrag) {
-            this.pos = this.pos.add(this.origin.sub(this.pos).mul(this.handleFriction));
-        } else {
-            const diff = this.touchPos.sub(this.origin);
-            const maxDist = Math.min(diff.mag(), this.radius);
-            this.pos = this.origin.add(diff.normalize().mul(maxDist));
-        }
-    }
-
-    draw(context) {
-        // Check if we're in jump zone (upward movement)
-        const diff = this.pos.sub(this.origin);
-        const normalizedY = -diff.y / this.radius;
-        const deadZone = 0.2;
-        const inJumpZone = normalizedY > deadZone;
-
-        // Draw joystick base with dynamic color based on jump zone
-        const baseColor = inJumpZone ? '#ff6600' : '#00ffff'; // Orange when jumping, cyan normally
-        const baseFill = inJumpZone ? 'rgba(255, 102, 0, 0.4)' : 'rgba(0, 255, 255, 0.3)';
-        
-        context.shadowColor = baseColor;
-        context.shadowBlur = inJumpZone ? 25 : 20;
-        context.beginPath();
-        context.fillStyle = baseFill;
-        context.arc(this.origin.x, this.origin.y, this.radius, 0, Math.PI * 2);
-        context.fill();
-        context.closePath();
-
-        // Draw joystick border
-        context.shadowBlur = 0;
-        context.beginPath();
-        context.strokeStyle = baseColor;
-        context.lineWidth = 3;
-        context.arc(this.origin.x, this.origin.y, this.radius, 0, Math.PI * 2);
-        context.stroke();
-
-        // Draw joystick handle (white, with orange tint when jumping)
-        const handleColor = inJumpZone ? '#ffaa77' : '#ffffff';
-        context.shadowColor = handleColor;
-        context.shadowBlur = 10;
-        context.beginPath();
-        context.fillStyle = handleColor;
-        context.arc(this.pos.x, this.pos.y, this.handleRadius, 0, Math.PI * 2);
-        context.fill();
-        context.closePath();
-        context.shadowBlur = 0;
-    }
-
-    update(context) {
-        this.reposition();
-        this.draw(context);
-        this.controlPuffy();
-    }
-
-    controlPuffy() {
-        // Get game scene dynamically
-        const gameScene = this.gameScene || window.game?.scene?.getScene('GameScene');
-        if (!gameScene || !gameScene.puffy || !gameScene.puffy.sprite) return;
-
-        const diff = this.pos.sub(this.origin);
-        const normalizedX = diff.x / this.radius;
-        const normalizedY = -diff.y / this.radius; // Negative because Y increases downward
-        const deadZone = 0.2;
-
-        let isMovingHorizontally = false;
-        let isMovingVertically = false;
-
-        // Handle horizontal movement
-        if (Math.abs(normalizedX) > deadZone) {
-            const speed = 120;
-            const velocityX = normalizedX * speed;
-            gameScene.puffy.sprite.body.setVelocityX(velocityX);
-            isMovingHorizontally = true;
-        } else {
-            // Stop horizontal movement
-            gameScene.puffy.sprite.body.setVelocityX(0);
-        }
-
-        // Handle vertical movement (jumping)
-        if (normalizedY > deadZone) {
-            // Upward movement triggers jumping with cooldown
-            const currentTime = Date.now();
-            const canJump = gameScene.puffy.sprite.body.touching.down || gameScene.puffy.sprite.body.blocked.down;
-            const cooldownPassed = (currentTime - this.lastJumpTime) > this.jumpCooldown;
-            
-            if (canJump && cooldownPassed) {
-                gameScene.puffy.sprite.body.setVelocityY(-300);
-                this.lastJumpTime = currentTime;
-                isMovingVertically = true;
-                
-                // Add haptic feedback for joystick jumping
-                if ('vibrate' in navigator) {
-                    navigator.vibrate(40);
-                }
-            }
-        }
-
-        // Set animation based on movement direction
-        if (isMovingVertically) {
-            // Jumping animation takes priority
-            gameScene.puffy.playAnimation('walk_up');
-            gameScene.currentDirection = 'up';
-        } else if (isMovingHorizontally) {
-            // Horizontal movement animations
-            if (normalizedX < 0) {
-                gameScene.puffy.playAnimation('walk_left');
-                gameScene.currentDirection = 'left';
-            } else {
-                gameScene.puffy.playAnimation('walk_right');
-                gameScene.currentDirection = 'right';
-            }
-        } else if (gameScene.isMoving) {
-            // Stop animation and return to idle
-            const lastDirection = gameScene.currentDirection || 'down';
-            gameScene.puffy.playAnimation(`idle_${lastDirection}`);
-        }
-
-        // Update movement state
-        gameScene.isMoving = isMovingHorizontally || isMovingVertically;
-    }
-}
-
-// Working Jump Button class
-class WorkingJumpButton {
-    constructor(x, y, radius, gameScene) {
+// Simple Movement Button class
+class MovementButton {
+    constructor(x, y, width, height, direction, gameScene) {
         this.x = x;
         this.y = y;
-        this.radius = radius;
+        this.width = width;
+        this.height = height;
+        this.direction = direction; // 'left' or 'right'
         this.pressed = false;
         this.gameScene = gameScene;
         this.listener();
@@ -221,25 +45,148 @@ class WorkingJumpButton {
 
     listener() {
         addEventListener('touchstart', e => {
-            const touch = e.touches[0];
-            const dist = Math.sqrt((touch.pageX - this.x) ** 2 + (touch.pageY - this.y) ** 2);
-            if (dist <= this.radius) {
-                e.preventDefault();
-                this.pressed = true;
-                this.jump();
-                if ('vibrate' in navigator) {
-                    navigator.vibrate(50);
+            for (let touch of e.touches) {
+                if (this.isInside(touch.pageX, touch.pageY)) {
+                    e.preventDefault();
+                    this.pressed = true;
+                    if ('vibrate' in navigator) {
+                        navigator.vibrate(30);
+                    }
+                    break;
                 }
             }
         }, { passive: false });
 
-        addEventListener('touchend', () => {
-            this.pressed = false;
+        addEventListener('touchend', e => {
+            // Check if any remaining touches are still on this button
+            let stillPressed = false;
+            for (let touch of e.touches) {
+                if (this.isInside(touch.pageX, touch.pageY)) {
+                    stillPressed = true;
+                    break;
+                }
+            }
+            if (!stillPressed) {
+                this.pressed = false;
+            }
         }, { passive: false });
 
+        addEventListener('touchmove', e => {
+            // Check if any touches are on this button
+            let isPressed = false;
+            for (let touch of e.touches) {
+                if (this.isInside(touch.pageX, touch.pageY)) {
+                    isPressed = true;
+                    break;
+                }
+            }
+            this.pressed = isPressed;
+        }, { passive: false });
+
+        // Mouse events for desktop testing
         addEventListener('mousedown', e => {
-            const dist = Math.sqrt((e.pageX - this.x) ** 2 + (e.pageY - this.y) ** 2);
-            if (dist <= this.radius) {
+            if (this.isInside(e.pageX, e.pageY)) {
+                this.pressed = true;
+            }
+        });
+
+        addEventListener('mouseup', () => {
+            this.pressed = false;
+        });
+    }
+
+    isInside(x, y) {
+        return x >= this.x && x <= this.x + this.width && 
+               y >= this.y && y <= this.y + this.height;
+    }
+
+    draw(context) {
+        // Unobtrusive design - subtle colors
+        const fillColor = this.pressed ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.15)';
+        const borderColor = this.pressed ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.3)';
+        
+        // Draw button background
+        context.fillStyle = fillColor;
+        context.fillRect(this.x, this.y, this.width, this.height);
+        
+        // Draw button border
+        context.strokeStyle = borderColor;
+        context.lineWidth = 1;
+        context.strokeRect(this.x, this.y, this.width, this.height);
+
+        // Draw arrow indicator
+        context.fillStyle = this.pressed ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)';
+        context.font = 'bold 16px Arial';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        
+        const centerX = this.x + this.width / 2;
+        const centerY = this.y + this.height / 2;
+        const arrow = this.direction === 'left' ? '←' : '→';
+        context.fillText(arrow, centerX, centerY);
+    }
+
+    update(context) {
+        this.draw(context);
+    }
+}
+
+// Simple Jump Button class
+class JumpButton {
+    constructor(x, y, width, height, gameScene) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.pressed = false;
+        this.gameScene = gameScene;
+        this.listener();
+    }
+
+    listener() {
+        addEventListener('touchstart', e => {
+            for (let touch of e.touches) {
+                if (this.isInside(touch.pageX, touch.pageY)) {
+                    e.preventDefault();
+                    this.pressed = true;
+                    this.jump();
+                    if ('vibrate' in navigator) {
+                        navigator.vibrate(50);
+                    }
+                    break;
+                }
+            }
+        }, { passive: false });
+
+        addEventListener('touchend', e => {
+            // Check if any remaining touches are still on this button
+            let stillPressed = false;
+            for (let touch of e.touches) {
+                if (this.isInside(touch.pageX, touch.pageY)) {
+                    stillPressed = true;
+                    break;
+                }
+            }
+            if (!stillPressed) {
+                this.pressed = false;
+            }
+        }, { passive: false });
+
+        addEventListener('touchmove', e => {
+            // Check if any touches are on this button
+            let isPressed = false;
+            for (let touch of e.touches) {
+                if (this.isInside(touch.pageX, touch.pageY)) {
+                    isPressed = true;
+                    break;
+                }
+            }
+            this.pressed = isPressed;
+        }, { passive: false });
+
+        // Mouse events for desktop testing
+        addEventListener('mousedown', e => {
+            if (this.isInside(e.pageX, e.pageY)) {
                 this.pressed = true;
                 this.jump();
             }
@@ -248,6 +195,11 @@ class WorkingJumpButton {
         addEventListener('mouseup', () => {
             this.pressed = false;
         });
+    }
+
+    isInside(x, y) {
+        return x >= this.x && x <= this.x + this.width && 
+               y >= this.y && y <= this.y + this.height;
     }
 
     jump() {
@@ -262,29 +214,28 @@ class WorkingJumpButton {
     }
 
     draw(context) {
-        // Draw jump button (orange with glow)
-        context.shadowColor = '#ff6600';
-        context.shadowBlur = this.pressed ? 30 : 15;
-        context.beginPath();
-        context.fillStyle = this.pressed ? 'rgba(255, 102, 0, 0.8)' : 'rgba(255, 102, 0, 0.6)';
-        context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        context.fill();
-        context.closePath();
+        // Unobtrusive design - subtle colors with slight orange tint for jump
+        const fillColor = this.pressed ? 'rgba(255, 180, 100, 0.4)' : 'rgba(255, 180, 100, 0.2)';
+        const borderColor = this.pressed ? 'rgba(255, 180, 100, 0.8)' : 'rgba(255, 180, 100, 0.4)';
+        
+        // Draw button background
+        context.fillStyle = fillColor;
+        context.fillRect(this.x, this.y, this.width, this.height);
+        
+        // Draw button border
+        context.strokeStyle = borderColor;
+        context.lineWidth = 1;
+        context.strokeRect(this.x, this.y, this.width, this.height);
 
-        // Draw jump button border
-        context.shadowBlur = 0;
-        context.beginPath();
-        context.strokeStyle = '#ff6600';
-        context.lineWidth = 3;
-        context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        context.stroke();
-
-        // Draw "JUMP" text
-        context.fillStyle = '#ffffff';
-        context.font = 'bold 12px Arial';
+        // Draw jump indicator
+        context.fillStyle = this.pressed ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.6)';
+        context.font = 'bold 16px Arial';
         context.textAlign = 'center';
         context.textBaseline = 'middle';
-        context.fillText('JUMP', this.x, this.y);
+        
+        const centerX = this.x + this.width / 2;
+        const centerY = this.y + this.height / 2;
+        context.fillText('↑', centerX, centerY);
     }
 
     update(context) {
@@ -298,7 +249,8 @@ class HopHopPuffGame {
         console.log('🎮 Initializing Hop Hop Puff...');
         this.game = null;
         this.isMobile = 'ontouchstart' in window;
-        this.joystick = null;
+        this.leftButton = null;
+        this.rightButton = null;
         this.jumpButton = null;
         this.controlsCanvas = null;
         this.controlsContext = null;
@@ -381,17 +333,28 @@ class HopHopPuffGame {
         this.controlsContext = this.controlsCanvas.getContext('2d');
         this.resizeCanvas();
 
-        // Create joystick and jump button
-        const joystickX = 100;
-        const joystickY = window.innerHeight - 120;
-        const jumpButtonX = window.innerWidth - 100;
-        const jumpButtonY = window.innerHeight - 120;
+        // Position buttons below ground level (unobtrusive)
+        const buttonWidth = 60;
+        const buttonHeight = 50;
+        const bottomMargin = 40;
+        const buttonSpacing = 10;
+        
+        // Left and right buttons on the left side
+        const leftButtonX = 20;
+        const rightButtonX = leftButtonX + buttonWidth + buttonSpacing;
+        const movementButtonY = window.innerHeight - bottomMargin - buttonHeight;
+        
+        // Jump button on the right side, same level
+        const jumpButtonX = window.innerWidth - 20 - buttonWidth;
+        const jumpButtonY = movementButtonY;
 
-        console.log(`🕹️ Creating joystick at (${joystickX}, ${joystickY})`);
+        console.log(`⬅️ Creating left button at (${leftButtonX}, ${movementButtonY})`);
+        console.log(`➡️ Creating right button at (${rightButtonX}, ${movementButtonY})`);
         console.log(`⬆️ Creating jump button at (${jumpButtonX}, ${jumpButtonY})`);
 
-        this.joystick = new WorkingJoystick(joystickX, joystickY, 60, 25, null);
-        this.jumpButton = new WorkingJumpButton(jumpButtonX, jumpButtonY, 40, null);
+        this.leftButton = new MovementButton(leftButtonX, movementButtonY, buttonWidth, buttonHeight, 'left', null);
+        this.rightButton = new MovementButton(rightButtonX, movementButtonY, buttonWidth, buttonHeight, 'right', null);
+        this.jumpButton = new JumpButton(jumpButtonX, jumpButtonY, buttonWidth, buttonHeight, null);
 
         // Start rendering loop
         this.renderMobileControls();
@@ -413,15 +376,31 @@ class HopHopPuffGame {
     }
 
     repositionControls() {
-        if (this.joystick) {
-            this.joystick.origin.x = 100;
-            this.joystick.origin.y = window.innerHeight - 120;
-            this.joystick.pos.x = this.joystick.origin.x;
-            this.joystick.pos.y = this.joystick.origin.y;
+        const buttonWidth = 60;
+        const buttonHeight = 50;
+        const bottomMargin = 40;
+        const buttonSpacing = 10;
+        
+        // Reposition movement buttons
+        const leftButtonX = 20;
+        const rightButtonX = leftButtonX + buttonWidth + buttonSpacing;
+        const movementButtonY = window.innerHeight - bottomMargin - buttonHeight;
+        
+        // Reposition jump button
+        const jumpButtonX = window.innerWidth - 20 - buttonWidth;
+        const jumpButtonY = movementButtonY;
+
+        if (this.leftButton) {
+            this.leftButton.x = leftButtonX;
+            this.leftButton.y = movementButtonY;
+        }
+        if (this.rightButton) {
+            this.rightButton.x = rightButtonX;
+            this.rightButton.y = movementButtonY;
         }
         if (this.jumpButton) {
-            this.jumpButton.x = window.innerWidth - 100;
-            this.jumpButton.y = window.innerHeight - 120;
+            this.jumpButton.x = jumpButtonX;
+            this.jumpButton.y = jumpButtonY;
         }
         console.log('📐 Controls repositioned for window resize');
     }
@@ -433,9 +412,12 @@ class HopHopPuffGame {
             // Clear canvas
             this.controlsContext.clearRect(0, 0, this.controlsCanvas.width, this.controlsCanvas.height);
 
-            // Update and draw controls
-            if (this.joystick) {
-                this.joystick.update(this.controlsContext);
+            // Update and draw all three buttons
+            if (this.leftButton) {
+                this.leftButton.update(this.controlsContext);
+            }
+            if (this.rightButton) {
+                this.rightButton.update(this.controlsContext);
             }
             if (this.jumpButton) {
                 this.jumpButton.update(this.controlsContext);
@@ -564,13 +546,18 @@ class GameScene extends Phaser.Scene {
         const speed = 120;
         let isMovingHorizontally = false;
 
-        // Handle horizontal movement (A/D keys)
-        if (this.cursors.A.isDown) {
+        // Check mobile button states
+        const hopHopPuffGame = window.hopHopPuffGame;
+        const leftPressed = hopHopPuffGame && hopHopPuffGame.leftButton && hopHopPuffGame.leftButton.pressed;
+        const rightPressed = hopHopPuffGame && hopHopPuffGame.rightButton && hopHopPuffGame.rightButton.pressed;
+
+        // Handle horizontal movement (keyboard OR mobile buttons)
+        if (this.cursors.A.isDown || leftPressed) {
             this.puffy.sprite.body.setVelocityX(-speed);
             this.puffy.playAnimation('walk_left');
             this.currentDirection = 'left';
             isMovingHorizontally = true;
-        } else if (this.cursors.D.isDown) {
+        } else if (this.cursors.D.isDown || rightPressed) {
             this.puffy.sprite.body.setVelocityX(speed);
             this.puffy.playAnimation('walk_right');
             this.currentDirection = 'right';
