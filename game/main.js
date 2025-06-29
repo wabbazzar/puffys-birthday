@@ -453,7 +453,7 @@ class LoadingScene extends Phaser.Scene {
     }
     
     preload() {
-        console.log('📦 Loading Scene: Basic assets...');
+        console.log('📦 Loading Scene: Basic assets + birthday assets...');
         
         // Create loading bar
         const { width, height } = this.cameras.main;
@@ -466,8 +466,12 @@ class LoadingScene extends Phaser.Scene {
         const progressBar = this.add.rectangle(width * 0.5, height * 0.6, 200, 20, 0x333333).setOrigin(0.5);
         const progressFill = this.add.rectangle(width * 0.5, height * 0.6, 0, 16, 0x00ffff).setOrigin(0.5);
 
+        // Load birthday assets - Following Phaser.js Framework Priority (Rule 3)
+        this.load.image('gift', 'assets/gift.png');
+        this.load.image('puffy_winks', 'assets/puffy_winks.png');
+
         // Note: PuffySprite handles its own loading
-        // Just load any basic assets here if needed
+        // Basic assets loaded here for birthday feature
 
         // Update loading progress
         this.load.on('progress', (progress) => {
@@ -475,11 +479,11 @@ class LoadingScene extends Phaser.Scene {
         });
 
         this.load.on('complete', () => {
-            console.log('✅ Basic assets loaded, starting game...');
+            console.log('✅ Assets loaded (including birthday assets), starting game...');
             this.scene.start('GameScene');
         });
         
-        // Start loading (even if no assets, this will trigger complete)
+        // Start loading
         this.load.start();
     }
 }
@@ -495,6 +499,9 @@ class GameScene extends Phaser.Scene {
         this.isMoving = false;
         this.currentDirection = 'down';
         this.puffyCollisionsSetup = false; // Track collision setup
+        this.gift = null; // Birthday gift sprite
+        this.overlayScreen = null; // Birthday invitation overlay
+        this.invitationShown = false; // Track if invitation has been shown
     }
     
     create() {
@@ -538,11 +545,17 @@ class GameScene extends Phaser.Scene {
         this.physics.add.existing(this.block4, true);
         this.platforms.add(this.block4);
 
+        // Add birthday gift on top platform (Level 4) - Following Phaser.js Framework Priority (Rule 3)
+        this.gift = this.add.image(width * 0.75, height - 240, 'gift');
+        this.gift.setScale(0.5); // Scale down to fit nicely on platform
+        this.physics.add.existing(this.gift, false); // Dynamic body for collision detection
+        this.gift.body.setSize(24, 24); // Set collision box size
+
         // Create Puffy and set up collision checking
         this.puffy = new PuffySprite(this);
         this.setupPuffyWhenReady(width, height);
 
-        console.log('✅ Game elements created: Puffy, ground, and tiered platform structure (4 levels)');
+        console.log('✅ Game elements created: Puffy, ground, tiered platforms, and birthday gift');
     }
 
     setupPuffyWhenReady(width, height) {
@@ -557,12 +570,18 @@ class GameScene extends Phaser.Scene {
                 this.puffy.createSprite(targetX, targetY);
                 this.puffy.startInitialAnimation();
                 
-                // Set up collisions (only once) - Using Phaser.js Framework Priority (Rule 3)
+                                // Set up collisions (only once) - Using Phaser.js Framework Priority (Rule 3)
                 if (!this.puffyCollisionsSetup) {
-                this.physics.add.collider(this.puffy.sprite, this.ground);
+                    this.physics.add.collider(this.puffy.sprite, this.ground);
                     this.physics.add.collider(this.puffy.sprite, this.platforms);
+                    
+                    // Birthday gift collision - triggers invitation overlay
+                    this.physics.add.overlap(this.puffy.sprite, this.gift, () => {
+                        this.showBirthdayInvitation();
+                    });
+                    
                     this.puffyCollisionsSetup = true;
-                    console.log('✅ Puffy sprite created and collisions set up with tiered platforms');
+                    console.log('✅ Puffy sprite created and collisions set up with platforms and birthday gift');
                 }
                 
             } else if (!this.puffy || !this.puffy.spriteSheetReady) {
@@ -625,6 +644,120 @@ class GameScene extends Phaser.Scene {
         }
 
         this.isMoving = isMovingHorizontally;
+    }
+
+    showBirthdayInvitation() {
+        // Only show invitation once
+        if (this.invitationShown) return;
+        this.invitationShown = true;
+
+        console.log('🎁 Puffy found the gift! Showing birthday invitation...');
+
+        // Pause the game physics
+        this.physics.pause();
+
+        // Create overlay background with semi-transparent dark layer
+        const { width, height } = this.cameras.main;
+        const overlayBg = this.add.rectangle(width * 0.5, height * 0.5, width, height, 0x000000, 0.7);
+        overlayBg.setDepth(100); // Ensure it's on top
+
+        // Add Puffy winks image as background decoration
+        const puffyWinks = this.add.image(width * 0.85, height * 0.8, 'puffy_winks');
+        puffyWinks.setScale(0.4); // Scale down to fit nicely
+        puffyWinks.setAlpha(0.6); // Semi-transparent for background effect
+        puffyWinks.setDepth(101);
+
+        // Create invitation text with cute styling
+        const invitationText = [
+            "🎉 You're invited to Puffy's Birthday! 🎉",
+            "",
+            "When: July 3rd 7pm-10pm",
+            "Where: Puffy's house!",
+            "What: Garden dinner + puffy's favorite movie!",
+            "",
+            "Can't wait to see you there! 🐱💕"
+        ];
+
+        // Add title with special styling
+        const titleText = this.add.text(width * 0.5, height * 0.25, "🎉 You're invited to Puffy's Birthday! 🎉", {
+            fontSize: '20px',
+            color: '#FFD700',
+            align: 'center',
+            fontStyle: 'bold',
+            stroke: '#8B4513',
+            strokeThickness: 2
+        }).setOrigin(0.5).setDepth(102);
+
+        // Add main invitation details
+        const detailsText = this.add.text(width * 0.5, height * 0.45, [
+            "When: July 3rd 7pm-10pm",
+            "Where: Puffy's house!",
+            "What: Garden dinner + puffy's favorite movie!",
+            "",
+            "Can't wait to see you there! 🐱💕"
+        ], {
+            fontSize: '16px',
+            color: '#FFFFFF',
+            align: 'center',
+            lineSpacing: 8,
+            backgroundColor: 'rgba(139, 69, 19, 0.8)',
+            padding: { x: 20, y: 15 }
+        }).setOrigin(0.5).setDepth(102);
+
+        // Add close instruction
+        const closeText = this.add.text(width * 0.5, height * 0.75, "Tap anywhere to continue playing!", {
+            fontSize: '14px',
+            color: '#00FFFF',
+            align: 'center',
+            fontStyle: 'italic'
+        }).setOrigin(0.5).setDepth(102);
+
+        // Store overlay elements for cleanup
+        this.overlayScreen = {
+            background: overlayBg,
+            puffyWinks: puffyWinks,
+            title: titleText,
+            details: detailsText,
+            close: closeText
+        };
+
+        // Make overlay clickable to close - Following Phaser.js Framework Priority (Rule 3)
+        overlayBg.setInteractive();
+        overlayBg.on('pointerdown', () => {
+            this.closeBirthdayInvitation();
+        });
+
+        // Also allow keyboard/mobile controls to close
+        this.input.keyboard.once('keydown', () => {
+            this.closeBirthdayInvitation();
+        });
+
+        console.log('✅ Birthday invitation overlay displayed');
+    }
+
+    closeBirthdayInvitation() {
+        console.log('🎮 Closing birthday invitation, resuming game...');
+
+        // Remove overlay elements
+        if (this.overlayScreen) {
+            Object.values(this.overlayScreen).forEach(element => {
+                if (element && element.destroy) {
+                    element.destroy();
+                }
+            });
+            this.overlayScreen = null;
+        }
+
+        // Remove the gift (it's been collected)
+        if (this.gift) {
+            this.gift.destroy();
+            this.gift = null;
+        }
+
+        // Resume game physics
+        this.physics.resume();
+
+        console.log('✅ Game resumed after birthday invitation');
     }
 }
 
