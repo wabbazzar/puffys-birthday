@@ -471,34 +471,35 @@ class GameScene extends Phaser.Scene {
         this.block.setStrokeStyle(2, 0x654321);
         this.physics.add.existing(this.block, true); // Static body
 
-        // Create Puffy (position will be set after sprite is ready)
+        // Create Puffy and set up collision checking
         this.puffy = new PuffySprite(this);
-        
-        // Wait for Puffy to be ready before setting up collisions
-        this.time.delayedCall(100, () => {
-            if (this.puffy.isReady && this.puffy.sprite) {
-                // Position Puffy
+        this.setupPuffyWhenReady(width, height);
+
+        console.log('✅ Game elements created: Puffy, ground, and one block');
+    }
+
+    setupPuffyWhenReady(width, height) {
+        // Check for Puffy readiness and set up positioning/collisions
+        const checkPuffyReady = () => {
+            if (this.puffy && this.puffy.isReady && this.puffy.sprite) {
+                console.log('✅ Puffy is ready! Setting up final positioning and collisions...');
+                
+                // Position Puffy on the ground level
                 this.puffy.sprite.setPosition(width * 0.3, height - 60);
                 
                 // Set up collisions
                 this.physics.add.collider(this.puffy.sprite, this.ground);
                 this.physics.add.collider(this.puffy.sprite, this.block);
                 
-                console.log('✅ Puffy positioned and collisions set up');
+                console.log('✅ Puffy positioned and collisions set up successfully');
             } else {
-                // Retry if not ready
-                this.time.delayedCall(100, () => {
-                    if (this.puffy.isReady && this.puffy.sprite) {
-                        this.puffy.sprite.setPosition(width * 0.3, height - 60);
-                        this.physics.add.collider(this.puffy.sprite, this.ground);
-                        this.physics.add.collider(this.puffy.sprite, this.block);
-                        console.log('✅ Puffy positioned and collisions set up (retry)');
-                    }
-                });
+                // Check again in 100ms if not ready yet
+                this.time.delayedCall(100, checkPuffyReady);
             }
-        });
-
-        console.log('✅ Game elements created: Puffy, ground, and one block');
+        };
+        
+        // Start checking immediately
+        checkPuffyReady();
     }
 
     setupKeyboardControls() {

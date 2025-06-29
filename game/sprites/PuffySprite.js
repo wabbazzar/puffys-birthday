@@ -128,9 +128,16 @@ class PuffySprite {
     createSprite() {
         console.log('🎯 Creating Puffy sprite...');
         
-        // Create sprite near ground level to avoid falling (scene will position properly)
-        const groundY = this.scene.cameras.main.height - 60;
-        this.sprite = this.scene.add.sprite(160, groundY, 'puffy_sprites', 0);
+        // Prevent duplicate sprite creation
+        if (this.sprite) {
+            console.log('⚠️ Sprite already exists, skipping creation');
+            return;
+        }
+        
+        // Create sprite at scene center initially (scene will position properly later)
+        const centerX = this.scene.cameras.main.width * 0.5;
+        const centerY = this.scene.cameras.main.height * 0.5;
+        this.sprite = this.scene.add.sprite(centerX, centerY, 'puffy_sprites', 0);
         
         // Set display size (spec: 48x48 pixels)
         this.sprite.setDisplaySize(this.displaySize, this.displaySize);
