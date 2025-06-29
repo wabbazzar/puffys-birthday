@@ -333,18 +333,25 @@ class HopHopPuffGame {
         this.controlsContext = this.controlsCanvas.getContext('2d');
         this.resizeCanvas();
 
-        // Position buttons below ground level (unobtrusive)
+        // Position buttons INSIDE THE GROUND AREA (not in gameplay space)
+        // Ground spans from (height - 40) to height, so controls go in that zone
+        const gameCanvas = document.querySelector('#game-container canvas');
+        const gameHeight = gameCanvas ? gameCanvas.height : 568; // Default mobile height
+        const groundTop = gameHeight - 40; // Ground starts at height - 40
+        const groundBottom = gameHeight;   // Ground ends at height
+        
         const buttonWidth = 60;
-        const buttonHeight = 50;
-        const bottomMargin = 40;
+        const buttonHeight = 30; // Reduced height to fit in ground area (40px total)
+        const groundMargin = 5;  // Small margin from ground edges
         const buttonSpacing = 10;
         
-        // Left and right buttons on the left side
+        // Position buttons within the ground area bounds
         const leftButtonX = 20;
         const rightButtonX = leftButtonX + buttonWidth + buttonSpacing;
-        const movementButtonY = window.innerHeight - bottomMargin - buttonHeight;
+        // Center buttons vertically within the ground area
+        const movementButtonY = groundTop + groundMargin;
         
-        // Jump button on the right side, same level
+        // Jump button on the right side, same level, within ground
         const jumpButtonX = window.innerWidth - 20 - buttonWidth;
         const jumpButtonY = movementButtonY;
 
@@ -376,17 +383,22 @@ class HopHopPuffGame {
     }
 
     repositionControls() {
+        // Reposition buttons INSIDE THE GROUND AREA (consistent with setupMobileControls)
+        const gameCanvas = document.querySelector('#game-container canvas');
+        const gameHeight = gameCanvas ? gameCanvas.height : 568;
+        const groundTop = gameHeight - 40;
+        
         const buttonWidth = 60;
-        const buttonHeight = 50;
-        const bottomMargin = 40;
+        const buttonHeight = 30;
+        const groundMargin = 5;
         const buttonSpacing = 10;
         
-        // Reposition movement buttons
+        // Reposition movement buttons within ground area
         const leftButtonX = 20;
         const rightButtonX = leftButtonX + buttonWidth + buttonSpacing;
-        const movementButtonY = window.innerHeight - bottomMargin - buttonHeight;
+        const movementButtonY = groundTop + groundMargin;
         
-        // Reposition jump button
+        // Reposition jump button within ground area
         const jumpButtonX = window.innerWidth - 20 - buttonWidth;
         const jumpButtonY = movementButtonY;
 
@@ -493,16 +505,39 @@ class GameScene extends Phaser.Scene {
         this.ground = this.add.rectangle(width * 0.5, height - 20, width, 40, 0x228B22);
         this.physics.add.existing(this.ground, true); // Static body
 
-        // Create single block platform
-        this.block = this.add.rectangle(width * 0.7, height - 80, 60, 24, 0x8B4513);
-        this.block.setStrokeStyle(2, 0x654321);
-        this.physics.add.existing(this.block, true); // Static body
+        // Create tiered platform structure (4 levels total including original block)
+        // Following Phaser.js Framework Priority (Rule 3) - using Phaser physics groups
+        this.platforms = this.physics.add.staticGroup();
+        
+        // Level 1: Original block (lowest tier)
+        this.block1 = this.add.rectangle(width * 0.25, height - 80, 60, 24, 0x8B4513);
+        this.block1.setStrokeStyle(2, 0x654321);
+        this.physics.add.existing(this.block1, true);
+        this.platforms.add(this.block1);
+
+        // Level 2: Right side, higher
+        this.block2 = this.add.rectangle(width * 0.75, height - 120, 60, 24, 0x8B4513);
+        this.block2.setStrokeStyle(2, 0x654321);
+        this.physics.add.existing(this.block2, true);
+        this.platforms.add(this.block2);
+
+        // Level 3: Left side, even higher  
+        this.block3 = this.add.rectangle(width * 0.25, height - 160, 60, 24, 0x8B4513);
+        this.block3.setStrokeStyle(2, 0x654321);
+        this.physics.add.existing(this.block3, true);
+        this.platforms.add(this.block3);
+
+        // Level 4: Right side, highest tier
+        this.block4 = this.add.rectangle(width * 0.75, height - 200, 60, 24, 0x8B4513);
+        this.block4.setStrokeStyle(2, 0x654321);
+        this.physics.add.existing(this.block4, true);
+        this.platforms.add(this.block4);
 
         // Create Puffy and set up collision checking
         this.puffy = new PuffySprite(this);
         this.setupPuffyWhenReady(width, height);
 
-        console.log('✅ Game elements created: Puffy, ground, and one block');
+        console.log('✅ Game elements created: Puffy, ground, and tiered platform structure (4 levels)');
     }
 
     setupPuffyWhenReady(width, height) {
@@ -517,12 +552,12 @@ class GameScene extends Phaser.Scene {
                 this.puffy.createSprite(targetX, targetY);
                 this.puffy.startInitialAnimation();
                 
-                // Set up collisions (only once)
+                // Set up collisions (only once) - Using Phaser.js Framework Priority (Rule 3)
                 if (!this.puffyCollisionsSetup) {
                     this.physics.add.collider(this.puffy.sprite, this.ground);
-                    this.physics.add.collider(this.puffy.sprite, this.block);
+                    this.physics.add.collider(this.puffy.sprite, this.platforms);
                     this.puffyCollisionsSetup = true;
-                    console.log('✅ Puffy sprite created and collisions set up successfully');
+                    console.log('✅ Puffy sprite created and collisions set up with tiered platforms');
                 }
                 
             } else if (!this.puffy || !this.puffy.spriteSheetReady) {
