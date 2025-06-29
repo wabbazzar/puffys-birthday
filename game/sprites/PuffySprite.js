@@ -50,20 +50,13 @@ class PuffySprite {
     
     async init() {
         try {
-            console.log('🐱 Initializing Puffy sprite (sprite sheet preloaded)...');
+            console.log('🐱 Initializing Puffy sprite with dynamic frame detection...');
             
-            // PERFORMANCE FIX: Skip async loading since sprite sheet is preloaded in LoadingScene
-            // Set standard frame dimensions for 4x4 grid with 24x24 frames
-            this.frameWidth = 24;
-            this.frameHeight = 24;
+            // First, analyze the sprite sheet image
+            await this.analyzeImageDimensions();
             
-            console.log(`📐 Using standard frame size: ${this.frameWidth}x${this.frameHeight}`);
-            console.log(`📐 Total frames: ${this.totalFrames} (4x4 grid)`);
-            
-            // Immediately set up animations since sprite sheet is already loaded
-            this.setupAnimations();
-            this.logFrameInfo();
-            this.markAsReadyForCreation();
+            // Then load and create the sprite
+            this.loadSpriteSheet();
             
         } catch (error) {
             console.error('❌ Failed to initialize Puffy sprite:', error);
@@ -180,14 +173,7 @@ class PuffySprite {
     }
 
     setupAnimations() {
-        console.log('🎬 Setting up animations (sprite sheet preloaded)...');
-        
-        // Check if animations already exist (prevent duplicates)
-        const firstAnimKey = Object.keys(this.animations)[0];
-        if (this.scene.anims.exists(firstAnimKey)) {
-            console.log('✅ Animations already exist, skipping creation');
-            return;
-        }
+        console.log('🎬 Setting up animations...');
         
         // Create all animations
         Object.keys(this.animations).forEach(animKey => {

@@ -470,12 +470,8 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('gift', 'assets/gift.png');
         this.load.image('puffy_winks', 'assets/puffy_winks.png');
 
-        // PERFORMANCE FIX: Preload Puffy sprite sheet here instead of async loading
-        // This prevents the slow movement issue at game start
-        this.load.spritesheet('puffy_sprites', 'assets/puffy_4_by_4.png', {
-            frameWidth: 24, // Standard frame size for 4x4 grid
-            frameHeight: 24
-        });
+        // Note: PuffySprite handles its own loading
+        // Basic assets loaded here for birthday feature
 
         // Update loading progress
         this.load.on('progress', (progress) => {
@@ -550,10 +546,10 @@ class GameScene extends Phaser.Scene {
         this.platforms.add(this.block4);
 
         // Add birthday gift on top platform (Level 4) - Following Phaser.js Framework Priority (Rule 3)
-        this.gift = this.add.image(width * 0.75, height - 235, 'gift');
-        this.gift.setScale(0.125); // 75% smaller than before (0.5 * 0.25 = 0.125)
-        this.physics.add.existing(this.gift, true); // STATIC body - gift should not fall!
-        this.gift.body.setSize(12, 12); // Smaller collision box to match reduced scale
+        this.gift = this.add.image(width * 0.75, height - 240, 'gift');
+        this.gift.setScale(0.5); // Scale down to fit nicely on platform
+        this.physics.add.existing(this.gift, false); // Dynamic body for collision detection
+        this.gift.body.setSize(24, 24); // Set collision box size
 
         // Create Puffy and set up collision checking
         this.puffy = new PuffySprite(this);
