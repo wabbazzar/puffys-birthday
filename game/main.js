@@ -256,7 +256,7 @@ class HopHopPuffGame {
         this.controlsContext = null;
         this.init();
     }
-
+    
     init() {
         console.log('📱 Device detected:', this.isMobile ? 'Mobile' : 'Desktop');
         this.setupPhaserConfig();
@@ -271,7 +271,7 @@ class HopHopPuffGame {
             }, 100);
         }
     }
-
+    
     setupPhaserConfig() {
         const baseWidth = 320;
         const baseHeight = 568;
@@ -308,17 +308,17 @@ class HopHopPuffGame {
             scene: [LoadingScene, GameScene]
         };
     }
-
+    
     createGame() {
         console.log('🎮 Creating Phaser game...');
-        this.game = new Phaser.Game(this.config);
+            this.game = new Phaser.Game(this.config);
         window.game = this.game;
         window.hopHopPuffGame = this;
     }
-
+            
     setupMobileControls() {
         console.log('📱 Setting up mobile controls...');
-        
+            
         // Find or wait for canvas element
         this.controlsCanvas = document.getElementById('controls-canvas');
         if (!this.controlsCanvas) {
@@ -333,25 +333,30 @@ class HopHopPuffGame {
         this.controlsContext = this.controlsCanvas.getContext('2d');
         this.resizeCanvas();
 
-        // Position buttons INSIDE THE GROUND AREA (not in gameplay space)
-        // Ground spans from (height - 40) to height, so controls go in that zone
-        const gameCanvas = document.querySelector('#game-container canvas');
-        const gameHeight = gameCanvas ? gameCanvas.height : 568; // Default mobile height
-        const groundTop = gameHeight - 40; // Ground starts at height - 40
-        const groundBottom = gameHeight;   // Ground ends at height
+        // Position buttons INSIDE THE GREEN GROUND AREA (taller ground: 60px)
+        // The ground is now 60px tall (from height-60 to height)
+        // But we need to map this to screen coordinates, not game coordinates
+        const gameContainer = document.getElementById('game-container');
+        const gameCanvas = gameContainer ? gameContainer.querySelector('canvas') : null;
+        
+        // Calculate the actual rendered ground area on screen
+        const windowHeight = window.innerHeight;
+        const groundHeightPx = 60; // Ground is now 60px tall
+        const groundScreenTop = windowHeight - groundHeightPx;
+        const groundScreenBottom = windowHeight;
         
         const buttonWidth = 60;
-        const buttonHeight = 30; // Reduced height to fit in ground area (40px total)
-        const groundMargin = 5;  // Small margin from ground edges
+        const buttonHeight = 40; // Increased to fit better in 60px ground area  
+        const groundMargin = 10; // Margin from ground edges
         const buttonSpacing = 10;
         
-        // Position buttons within the ground area bounds
+        // Position buttons within the visual ground area on screen
         const leftButtonX = 20;
         const rightButtonX = leftButtonX + buttonWidth + buttonSpacing;
-        // Center buttons vertically within the ground area
-        const movementButtonY = groundTop + groundMargin;
+        // Position in the lower part of the ground area for better visibility
+        const movementButtonY = groundScreenTop + groundMargin;
         
-        // Jump button on the right side, same level, within ground
+        // Jump button on the right side, within ground area
         const jumpButtonX = window.innerWidth - 20 - buttonWidth;
         const jumpButtonY = movementButtonY;
 
@@ -383,20 +388,20 @@ class HopHopPuffGame {
     }
 
     repositionControls() {
-        // Reposition buttons INSIDE THE GROUND AREA (consistent with setupMobileControls)
-        const gameCanvas = document.querySelector('#game-container canvas');
-        const gameHeight = gameCanvas ? gameCanvas.height : 568;
-        const groundTop = gameHeight - 40;
+        // Reposition buttons INSIDE THE GREEN GROUND AREA (consistent with setupMobileControls)
+        const windowHeight = window.innerHeight;
+        const groundHeightPx = 60; // Taller ground area
+        const groundScreenTop = windowHeight - groundHeightPx;
         
         const buttonWidth = 60;
-        const buttonHeight = 30;
-        const groundMargin = 5;
+        const buttonHeight = 40;
+        const groundMargin = 10;
         const buttonSpacing = 10;
         
-        // Reposition movement buttons within ground area
+        // Reposition movement buttons within visual ground area
         const leftButtonX = 20;
         const rightButtonX = leftButtonX + buttonWidth + buttonSpacing;
-        const movementButtonY = groundTop + groundMargin;
+        const movementButtonY = groundScreenTop + groundMargin;
         
         // Reposition jump button within ground area
         const jumpButtonX = window.innerWidth - 20 - buttonWidth;
@@ -446,7 +451,7 @@ class LoadingScene extends Phaser.Scene {
     constructor() {
         super({ key: 'LoadingScene' });
     }
-
+    
     preload() {
         console.log('📦 Loading Scene: Basic assets...');
         
@@ -491,7 +496,7 @@ class GameScene extends Phaser.Scene {
         this.currentDirection = 'down';
         this.puffyCollisionsSetup = false; // Track collision setup
     }
-
+    
     create() {
         const { width, height } = this.cameras.main;
         console.log(`🎮 Game Scene: Creating simplified game (${width}x${height})`);
@@ -501,34 +506,34 @@ class GameScene extends Phaser.Scene {
     }
 
     setupGameElements(width, height) {
-        // Create ground (simple green rectangle)
-        this.ground = this.add.rectangle(width * 0.5, height - 20, width, 40, 0x228B22);
+        // Create ground (simple green rectangle) - 50% taller to accommodate mobile controls
+        this.ground = this.add.rectangle(width * 0.5, height - 30, width, 60, 0x228B22);
         this.physics.add.existing(this.ground, true); // Static body
 
         // Create tiered platform structure (4 levels total including original block)
         // Following Phaser.js Framework Priority (Rule 3) - using Phaser physics groups
         this.platforms = this.physics.add.staticGroup();
         
-        // Level 1: Original block (lowest tier)
-        this.block1 = this.add.rectangle(width * 0.25, height - 80, 60, 24, 0x8B4513);
+        // Level 1: Original block (lowest tier) - adjusted for taller ground
+        this.block1 = this.add.rectangle(width * 0.25, height - 100, 60, 24, 0x8B4513);
         this.block1.setStrokeStyle(2, 0x654321);
         this.physics.add.existing(this.block1, true);
         this.platforms.add(this.block1);
 
-        // Level 2: Right side, higher
-        this.block2 = this.add.rectangle(width * 0.75, height - 120, 60, 24, 0x8B4513);
+        // Level 2: Right side, higher - adjusted for taller ground
+        this.block2 = this.add.rectangle(width * 0.75, height - 140, 60, 24, 0x8B4513);
         this.block2.setStrokeStyle(2, 0x654321);
         this.physics.add.existing(this.block2, true);
         this.platforms.add(this.block2);
 
-        // Level 3: Left side, even higher  
-        this.block3 = this.add.rectangle(width * 0.25, height - 160, 60, 24, 0x8B4513);
+        // Level 3: Left side, even higher - adjusted for taller ground
+        this.block3 = this.add.rectangle(width * 0.25, height - 180, 60, 24, 0x8B4513);
         this.block3.setStrokeStyle(2, 0x654321);
         this.physics.add.existing(this.block3, true);
         this.platforms.add(this.block3);
 
-        // Level 4: Right side, highest tier
-        this.block4 = this.add.rectangle(width * 0.75, height - 200, 60, 24, 0x8B4513);
+        // Level 4: Right side, highest tier - adjusted for taller ground
+        this.block4 = this.add.rectangle(width * 0.75, height - 220, 60, 24, 0x8B4513);
         this.block4.setStrokeStyle(2, 0x654321);
         this.physics.add.existing(this.block4, true);
         this.platforms.add(this.block4);
@@ -546,15 +551,15 @@ class GameScene extends Phaser.Scene {
             if (this.puffy && this.puffy.spriteSheetReady && !this.puffy.sprite) {
                 console.log('✅ Puffy sprite sheet is ready! Creating sprite...');
                 
-                // Create sprite at correct position
+                // Create sprite at correct position - adjusted for taller ground
                 const targetX = width * 0.3;
-                const targetY = height - 60;
+                const targetY = height - 80;
                 this.puffy.createSprite(targetX, targetY);
                 this.puffy.startInitialAnimation();
                 
                 // Set up collisions (only once) - Using Phaser.js Framework Priority (Rule 3)
                 if (!this.puffyCollisionsSetup) {
-                    this.physics.add.collider(this.puffy.sprite, this.ground);
+                this.physics.add.collider(this.puffy.sprite, this.ground);
                     this.physics.add.collider(this.puffy.sprite, this.platforms);
                     this.puffyCollisionsSetup = true;
                     console.log('✅ Puffy sprite created and collisions set up with tiered platforms');
@@ -577,7 +582,7 @@ class GameScene extends Phaser.Scene {
 
     update() {
         if (!this.puffy || !this.puffy.sprite) return;
-
+        
         const speed = 120;
         let isMovingHorizontally = false;
 
@@ -588,20 +593,20 @@ class GameScene extends Phaser.Scene {
 
         // Handle horizontal movement (keyboard OR mobile buttons)
         if (this.cursors.A.isDown || leftPressed) {
-            this.puffy.sprite.body.setVelocityX(-speed);
-            this.puffy.playAnimation('walk_left');
+                this.puffy.sprite.body.setVelocityX(-speed);
+                this.puffy.playAnimation('walk_left');
             this.currentDirection = 'left';
             isMovingHorizontally = true;
         } else if (this.cursors.D.isDown || rightPressed) {
-            this.puffy.sprite.body.setVelocityX(speed);
-            this.puffy.playAnimation('walk_right');
+                this.puffy.sprite.body.setVelocityX(speed);
+                this.puffy.playAnimation('walk_right');
             this.currentDirection = 'right';
             isMovingHorizontally = true;
         } else {
-            this.puffy.sprite.body.setVelocityX(0);
+        this.puffy.sprite.body.setVelocityX(0);
             if (this.isMoving && !isMovingHorizontally) {
-                const lastDirection = this.currentDirection || 'down';
-                this.puffy.playAnimation(`idle_${lastDirection}`);
+        const lastDirection = this.currentDirection || 'down';
+        this.puffy.playAnimation(`idle_${lastDirection}`);
             }
         }
 
