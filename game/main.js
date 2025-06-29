@@ -681,21 +681,21 @@ class GameScene extends Phaser.Scene {
         const overlayBg = this.add.rectangle(0, 0, overlayW, overlayH, 0x000000, 0.85)
             .setOrigin(0.5).setStrokeStyle(2, 0xffffff);
         overlayContainer.add(overlayBg);
-        // Title
+        // Title with improved responsive sizing
         const title = this.add.text(0, 0, "You're invited to Puffy's Birthday", {
             fontFamily: 'Playfair Display, Georgia, serif',
-            fontSize: width < 500 ? '20px' : '32px',
+            fontSize: width < 400 ? '18px' : width < 500 ? '22px' : '28px',
             color: '#FFD700',
             fontStyle: 'bold',
             align: 'center',
             stroke: '#8B4513',
-            strokeThickness: 3,
+            strokeThickness: 2,
             shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 4, fill: true },
-            wordWrap: { width: overlayW * 0.95, useAdvancedWrap: true },
-            fixedWidth: overlayW * 0.95
+            wordWrap: { width: overlayW * 0.9, useAdvancedWrap: true },
+            fixedWidth: overlayW * 0.9
         }).setOrigin(0.5, 0);
         overlayContainer.add(title);
-        // Details
+        // Details with improved text wrapping
         const detailsText = this.add.text(0, 0, [
             "When: July 3rd 7pm-10pm",
             "Where: Puffy's house",
@@ -704,14 +704,14 @@ class GameScene extends Phaser.Scene {
             "Can't wait to see you there! 🐱💕"
         ], {
             fontFamily: 'Playfair Display, Georgia, serif',
-            fontSize: width < 500 ? '14px' : '18px',
+            fontSize: width < 500 ? '13px' : '16px',
             color: '#FFFFFF',
             align: 'center',
-            lineSpacing: 10,
+            lineSpacing: 8,
             backgroundColor: 'rgba(139, 69, 19, 0.85)',
-            padding: { x: 18, y: 20 },
-            wordWrap: { width: overlayW * 0.95, useAdvancedWrap: true },
-            fixedWidth: overlayW * 0.95
+            padding: { x: 16, y: 18 },
+            wordWrap: { width: overlayW * 0.85, useAdvancedWrap: true },
+            fixedWidth: overlayW * 0.85
         }).setOrigin(0.5, 0);
         overlayContainer.add(detailsText);
         // Puffy image
