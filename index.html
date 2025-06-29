@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    
+    <!-- Mobile-first cache control -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- PWA manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00ffff">
+    
+    <!-- Mobile app-like experience -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Hop Hop Puff">
+    
+    <title>Hop Hop Puff - Help Puffy Reach the Beef Jerky!</title>
+    
+    <!-- Mobile-first styles -->
+    <link rel="stylesheet" href="styles/mobile.css">
+    <link rel="stylesheet" href="styles/desktop.css" media="(min-width: 1024px)">
+    
+    <!-- Phaser.js -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <div id="loading-screen">
+            <h1>🐱 Hop Hop Puff</h1>
+            <p>Loading Puffy's Kitchen Adventure...</p>
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+    
+    <!-- Touch controls overlay for mobile -->
+    <div id="mobile-controls" class="mobile-only">
+        <div id="virtual-dpad">
+            <button class="dpad-btn" id="dpad-up" data-direction="up">↑</button>
+            <button class="dpad-btn" id="dpad-left" data-direction="left">←</button>
+            <button class="dpad-btn" id="dpad-right" data-direction="right">→</button>
+            <button class="dpad-btn" id="dpad-down" data-direction="down">↓</button>
+        </div>
+        <div id="mobile-ui">
+            <button id="mobile-pause-btn" class="ui-btn">⏸️</button>
+        </div>
+    </div>
+    
+    <!-- Game UI overlay -->
+    <div id="game-ui">
+        <div id="ui-top-bar">
+            <div id="lives-display">❤️❤️❤️</div>
+            <div id="score-display">Score: 0</div>
+            <div id="timer-display">Time: 0:00</div>
+            <button id="pause-btn" class="ui-btn desktop-only">Pause</button>
+        </div>
+    </div>
+    
+    <!-- Game scripts -->
+    <script src="game/sprites/PuffySprite.js"></script>
+    <script src="game/main.js"></script>
+</body>
+</html> 

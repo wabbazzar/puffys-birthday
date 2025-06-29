@@ -1,0 +1,295 @@
+/* Desktop Enhancement CSS for Hop Hop Puff */
+/* Applied only on screens 1024px+ */
+
+/* Desktop Layout Enhancements */
+@media (min-width: 1024px) {
+    
+    /* Enhanced Game Container */
+    #game-container {
+        padding: 20px;
+        background: radial-gradient(ellipse at center, #2D1B69 0%, #1a0f3a 70%, #0d0520 100%);
+    }
+    
+    /* Hide mobile controls on desktop */
+    .mobile-only {
+        display: none !important;
+    }
+    
+    .desktop-only {
+        display: block;
+    }
+    
+    /* Enhanced UI for larger screens */
+    #ui-top-bar {
+        padding: 15px 25px;
+        backdrop-filter: blur(10px);
+        border-radius: 0 0 15px 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    #lives-display,
+    #score-display,
+    #timer-display {
+        font-size: 1.2rem;
+        margin: 0 15px;
+    }
+    
+    /* Desktop Pause Button */
+    #pause-btn {
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 25px;
+        background: linear-gradient(135deg, rgba(0, 255, 255, 0.3), rgba(0, 255, 255, 0.1));
+        backdrop-filter: blur(5px);
+        transition: all 0.2s ease;
+    }
+    
+    #pause-btn:hover {
+        background: linear-gradient(135deg, rgba(0, 255, 255, 0.5), rgba(0, 255, 255, 0.3));
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+        transform: translateY(-2px);
+    }
+    
+    #pause-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+    }
+    
+    /* Enhanced Game Canvas */
+    canvas {
+        border-radius: 15px;
+        box-shadow: 
+            0 10px 40px rgba(0, 0, 0, 0.6),
+            0 0 0 2px rgba(0, 255, 255, 0.2),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+        transition: box-shadow 0.3s ease;
+    }
+    
+    canvas:focus {
+        outline: none;
+        box-shadow: 
+            0 10px 40px rgba(0, 0, 0, 0.6),
+            0 0 0 3px rgba(0, 255, 255, 0.6),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Keyboard Shortcuts Overlay */
+    #keyboard-shortcuts {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        border-radius: 10px;
+        padding: 15px;
+        font-size: 0.9rem;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 200;
+    }
+    
+    #keyboard-shortcuts.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    #keyboard-shortcuts h3 {
+        color: #00ffff;
+        margin-bottom: 10px;
+        font-size: 1rem;
+    }
+    
+    .shortcut-item {
+        display: flex;
+        justify-content: space-between;
+        margin: 5px 0;
+        color: #ccc;
+    }
+    
+    .shortcut-key {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-family: monospace;
+        color: #00ffff;
+        font-weight: bold;
+        min-width: 60px;
+        text-align: center;
+    }
+    
+    /* Loading Screen Desktop Enhancement */
+    #loading-screen h1 {
+        font-size: 4rem;
+        text-shadow: 
+            0 0 20px #00ffff,
+            0 0 40px #00ffff,
+            0 0 60px #00ffff;
+    }
+    
+    #loading-screen p {
+        font-size: 1.5rem;
+    }
+    
+    .loading-spinner {
+        width: 80px;
+        height: 80px;
+        border-width: 6px;
+    }
+    
+    /* Game Over/Pause Modal Enhancements */
+    .modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, rgba(45, 27, 105, 0.95), rgba(26, 15, 58, 0.95));
+        backdrop-filter: blur(20px);
+        border: 2px solid rgba(0, 255, 255, 0.4);
+        border-radius: 20px;
+        padding: 40px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        z-index: 500;
+        min-width: 400px;
+    }
+    
+    .modal h2 {
+        color: #00ffff;
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        text-shadow: 0 0 20px #00ffff;
+    }
+    
+    .modal p {
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+        color: #ccc;
+    }
+    
+    .modal-buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+    }
+    
+    .modal-btn {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        border: 2px solid #00ffff;
+        border-radius: 25px;
+        background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 255, 255, 0.1));
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+    }
+    
+    .modal-btn:hover {
+        background: linear-gradient(135deg, rgba(0, 255, 255, 0.4), rgba(0, 255, 255, 0.2));
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
+        transform: translateY(-3px);
+    }
+    
+    .modal-btn:active {
+        transform: translateY(-1px);
+    }
+    
+    .modal-btn.primary {
+        background: linear-gradient(135deg, #00ffff, #0099cc);
+        color: #000;
+        font-weight: bold;
+    }
+    
+    .modal-btn.primary:hover {
+        box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+    }
+    
+    /* Performance Stats (Debug Mode) */
+    #performance-stats {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 10px;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 0.8rem;
+        color: #00ff00;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 300;
+    }
+    
+    #performance-stats.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* Fullscreen Mode Enhancements */
+    .fullscreen #game-container {
+        padding: 0;
+    }
+    
+    .fullscreen #ui-top-bar {
+        border-radius: 0;
+    }
+    
+    /* Hover Effects for Interactive Elements */
+    .ui-btn:hover {
+        background: linear-gradient(135deg, rgba(0, 255, 255, 0.5), rgba(0, 255, 255, 0.3));
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        transform: translateY(-2px);
+    }
+    
+    /* Enhanced Focus Indicators */
+    button:focus,
+    canvas:focus {
+        outline: 3px solid rgba(0, 255, 255, 0.6);
+        outline-offset: 2px;
+    }
+    
+    /* Smooth Scrolling for Menus */
+    * {
+        scroll-behavior: smooth;
+    }
+    
+    /* Desktop Animations */
+    @keyframes glow {
+        0%, 100% { 
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+        }
+        50% { 
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+        }
+    }
+    
+    .glow-effect {
+        animation: glow 2s ease-in-out infinite;
+    }
+    
+    /* High DPI Display Optimizations */
+    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+        canvas {
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+        }
+    }
+    
+    /* Dark Mode Support */
+    @media (prefers-color-scheme: dark) {
+        .modal {
+            background: linear-gradient(135deg, rgba(20, 10, 50, 0.98), rgba(10, 5, 25, 0.98));
+        }
+    }
+    
+    /* Print Styles (Hide Game) */
+    @media print {
+        * {
+            display: none !important;
+        }
+    }
+} 
