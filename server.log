@@ -26,3 +26,5 @@
 127.0.0.1 - - [29/Jun/2025 12:58:11] "GET /manifest.json HTTP/1.1" 404 -
 127.0.0.1 - - [29/Jun/2025 12:58:11] code 404, message File not found
 127.0.0.1 - - [29/Jun/2025 12:58:11] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [29/Jun/2025 13:00:36] code 404, message File not found
+127.0.0.1 - - [29/Jun/2025 13:00:36] "GET /sw.js HTTP/1.1" 404 -
