@@ -3,6 +3,252 @@
 
 console.log('🐱 Hop Hop Puff - Loading mobile-first game engine...');
 
+// Vector2 class for joystick math
+class Vector2 {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    add(vector) {
+        return new Vector2(this.x + vector.x, this.y + vector.y);
+    }
+    sub(vector) {
+        return new Vector2(this.x - vector.x, this.y - vector.y);
+    }
+    mul(n) {
+        return new Vector2(this.x * n, this.y * n);
+    }
+    div(n) {
+        return new Vector2(this.x / n, this.y / n);
+    }
+    mag() {
+        return Math.sqrt(this.x ** 2 + this.y ** 2);
+    }
+    normalize() {
+        return this.mag() === 0 ? new Vector2(0, 0) : this.div(this.mag());
+    }
+}
+
+// Working Joystick class (based on proven example)
+class WorkingJoystick {
+    constructor(x, y, radius, handleRadius, gameScene) {
+        this.pos = new Vector2(x, y);
+        this.origin = new Vector2(x, y);
+        this.radius = radius;
+        this.handleRadius = handleRadius;
+        this.handleFriction = 0.25;
+        this.ondrag = false;
+        this.touchPos = new Vector2(0, 0);
+        this.gameScene = gameScene; // Reference to control Puffy
+        this.listener();
+    }
+
+    listener() {
+        // Touch Events
+        addEventListener('touchstart', e => {
+            e.preventDefault();
+            this.touchPos = new Vector2(e.touches[0].pageX, e.touches[0].pageY);
+            if (this.touchPos.sub(this.origin).mag() <= this.radius) {
+                this.ondrag = true;
+                // Haptic feedback
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(30);
+                }
+            }
+        }, { passive: false });
+
+        addEventListener('touchend', e => {
+            e.preventDefault();
+            this.ondrag = false;
+        }, { passive: false });
+
+        addEventListener('touchmove', e => {
+            e.preventDefault();
+            this.touchPos = new Vector2(e.touches[0].pageX, e.touches[0].pageY);
+        }, { passive: false });
+
+        // Mouse Events for desktop
+        addEventListener('mousedown', e => {
+            this.touchPos = new Vector2(e.pageX, e.pageY);
+            if (this.touchPos.sub(this.origin).mag() <= this.radius) {
+                this.ondrag = true;
+            }
+        });
+
+        addEventListener('mouseup', () => {
+            this.ondrag = false;
+        });
+
+        addEventListener('mousemove', e => {
+            this.touchPos = new Vector2(e.pageX, e.pageY);
+        });
+    }
+
+    reposition() {
+        if (!this.ondrag) {
+            this.pos = this.pos.add(this.origin.sub(this.pos).mul(this.handleFriction));
+        } else {
+            const diff = this.touchPos.sub(this.origin);
+            const maxDist = Math.min(diff.mag(), this.radius);
+            this.pos = this.origin.add(diff.normalize().mul(maxDist));
+        }
+    }
+
+    draw(context) {
+        // Draw joystick base (cyan with glow)
+        context.shadowColor = '#00ffff';
+        context.shadowBlur = 20;
+        context.beginPath();
+        context.fillStyle = 'rgba(0, 255, 255, 0.3)';
+        context.arc(this.origin.x, this.origin.y, this.radius, 0, Math.PI * 2);
+        context.fill();
+        context.closePath();
+
+        // Draw joystick border
+        context.shadowBlur = 0;
+        context.beginPath();
+        context.strokeStyle = '#00ffff';
+        context.lineWidth = 3;
+        context.arc(this.origin.x, this.origin.y, this.radius, 0, Math.PI * 2);
+        context.stroke();
+
+        // Draw joystick handle (white)
+        context.shadowColor = '#ffffff';
+        context.shadowBlur = 10;
+        context.beginPath();
+        context.fillStyle = '#ffffff';
+        context.arc(this.pos.x, this.pos.y, this.handleRadius, 0, Math.PI * 2);
+        context.fill();
+        context.closePath();
+        context.shadowBlur = 0;
+    }
+
+    update(context) {
+        this.reposition();
+        this.draw(context);
+        this.controlPuffy();
+    }
+
+    controlPuffy() {
+        if (!this.gameScene || !this.gameScene.puffy || !this.gameScene.puffy.sprite) return;
+
+        const diff = this.pos.sub(this.origin);
+        const normalizedX = diff.x / this.radius;
+        const normalizedY = diff.y / this.radius;
+        const deadZone = 0.2;
+
+        // Handle horizontal movement
+        if (Math.abs(normalizedX) > deadZone) {
+            const speed = this.gameScene.puffy.speed || 100;
+            const velocityX = normalizedX * speed;
+            this.gameScene.puffy.sprite.body.setVelocityX(velocityX);
+
+            // Set animation based on direction
+            if (normalizedX < 0) {
+                this.gameScene.puffy.playAnimation('walk_left');
+                this.gameScene.currentDirection = 'left';
+            } else {
+                this.gameScene.puffy.playAnimation('walk_right');
+                this.gameScene.currentDirection = 'right';
+            }
+            this.gameScene.isMoving = true;
+        } else {
+            // Stop horizontal movement
+            this.gameScene.puffy.sprite.body.setVelocityX(0);
+            if (this.gameScene.isMoving) {
+                const lastDirection = this.gameScene.currentDirection || 'down';
+                this.gameScene.puffy.playAnimation(`idle_${lastDirection}`);
+                this.gameScene.isMoving = false;
+            }
+        }
+    }
+}
+
+// Working Jump Button class
+class WorkingJumpButton {
+    constructor(x, y, radius, gameScene) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.pressed = false;
+        this.gameScene = gameScene;
+        this.listener();
+    }
+
+    listener() {
+        addEventListener('touchstart', e => {
+            const touch = e.touches[0];
+            const dist = Math.sqrt((touch.pageX - this.x) ** 2 + (touch.pageY - this.y) ** 2);
+            if (dist <= this.radius) {
+                e.preventDefault();
+                this.pressed = true;
+                this.jump();
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(50);
+                }
+            }
+        }, { passive: false });
+
+        addEventListener('touchend', () => {
+            this.pressed = false;
+        }, { passive: false });
+
+        addEventListener('mousedown', e => {
+            const dist = Math.sqrt((e.pageX - this.x) ** 2 + (e.pageY - this.y) ** 2);
+            if (dist <= this.radius) {
+                this.pressed = true;
+                this.jump();
+            }
+        });
+
+        addEventListener('mouseup', () => {
+            this.pressed = false;
+        });
+    }
+
+    jump() {
+        if (!this.gameScene || !this.gameScene.puffy || !this.gameScene.puffy.sprite) return;
+
+        // Jump if on ground or platform
+        if (this.gameScene.puffy.sprite.body.touching.down || this.gameScene.puffy.sprite.body.blocked.down) {
+            this.gameScene.puffy.sprite.body.setVelocityY(-250);
+            this.gameScene.puffy.playAnimation('walk_up');
+        }
+    }
+
+    draw(context) {
+        const color = this.pressed ? '#ff6600' : '#ff9900';
+        
+        // Draw button with glow
+        context.shadowColor = color;
+        context.shadowBlur = 20;
+        context.beginPath();
+        context.fillStyle = color;
+        context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        context.fill();
+        context.closePath();
+
+        // Draw border
+        context.shadowBlur = 0;
+        context.beginPath();
+        context.strokeStyle = '#ff9900';
+        context.lineWidth = 3;
+        context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        context.stroke();
+
+        // Draw text
+        context.fillStyle = 'white';
+        context.font = 'bold 16px monospace';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText('JUMP', this.x, this.y);
+    }
+
+    update(context) {
+        this.draw(context);
+    }
+}
+
 class HopHopPuffGame {
     constructor() {
         this.config = null;
