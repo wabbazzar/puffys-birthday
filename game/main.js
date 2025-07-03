@@ -466,6 +466,8 @@ class LoadingScene extends Phaser.Scene {
         const progressBar = this.add.rectangle(width * 0.5, height * 0.6, 200, 20, 0x333333).setOrigin(0.5);
         const progressFill = this.add.rectangle(width * 0.5, height * 0.6, 0, 16, 0x00ffff).setOrigin(0.5);
 
+        // Sparkle texture will be created in GameScene create() method
+
         // Load birthday assets - Following Phaser.js Framework Priority (Rule 3)
         this.load.image('gift', 'assets/gift.png');
         this.load.image('puffy_winks', 'assets/puffy_winks.png');
@@ -500,6 +502,7 @@ class GameScene extends Phaser.Scene {
         this.currentDirection = 'down';
         this.puffyCollisionsSetup = false; // Track collision setup
         this.gift = null; // Birthday gift sprite
+        this.giftSparkles = null; // Sparkle particle emitter for gift
         this.overlayScreen = null; // Birthday invitation overlay
         this.invitationShown = false; // Track if invitation has been shown
     }
@@ -508,8 +511,62 @@ class GameScene extends Phaser.Scene {
         const { width, height } = this.cameras.main;
         console.log(`🎮 Game Scene: Creating simplified game (${width}x${height})`);
 
+        // Create sparkle texture for gift particles - Following Phaser.js Framework Priority (Rule 3)
+        this.createSparkleTexture();
+        
         this.setupGameElements(width, height);
         this.setupKeyboardControls();
+    }
+
+    createSparkleTexture() {
+        // Create sparkle texture using Phaser graphics - Following Phaser.js Framework Priority (Rule 3)
+        const graphics = this.add.graphics();
+        
+        // Create a star-like sparkle
+        graphics.fillStyle(0xFFFFFF); // White sparkle
+        graphics.fillStar(4, 4, 4, 4, 1.5, 0); // x, y, points, innerRadius, outerRadius, rotation
+        
+        // Also add a small circle for variety
+        graphics.fillCircle(4, 4, 1.5);
+        
+        graphics.generateTexture('sparkle', 8, 8);
+        graphics.destroy();
+        
+        console.log('✨ Sparkle texture created');
+    }
+
+    createGiftSparkles(giftX, giftY) {
+        // Create magical sparkle particles around the gift - Following Phaser.js Framework Priority (Rule 3)
+        this.giftSparkles = this.add.particles(giftX, giftY, 'sparkle', {
+            // Sparkle colors - gold, white, and light blue for magical effect
+            tint: [0xFFD700, 0xFFFFFF, 0x87CEEB, 0xFFFACD],
+            
+            // Position and emission area
+            x: { min: -15, max: 15 }, // Sparkles appear around the gift
+            y: { min: -15, max: 15 },
+            
+            // Sparkle behavior
+            speed: { min: 10, max: 30 },
+            scale: { start: 0.3, end: 0.1 },
+            alpha: { start: 0.8, end: 0 },
+            rotate: { min: 0, max: 360 },
+            
+            // Emission rate and lifespan
+            frequency: 150, // Emit every 150ms
+            lifespan: 1000, // Live for 1 second
+            quantity: 1, // One sparkle at a time for subtle effect
+            
+            // Movement pattern
+            gravityY: -20, // Slight upward float
+            
+            // Blend mode for magical glow
+            blendMode: 'ADD'
+        });
+        
+        // Set depth to appear above the gift
+        this.giftSparkles.setDepth(10);
+        
+        console.log('✨ Gift sparkle particles created and animated');
     }
 
     setupGameElements(width, height) {
@@ -557,11 +614,14 @@ class GameScene extends Phaser.Scene {
         this.physics.add.existing(this.gift, true); // STATIC body
         this.gift.body.setSize(giftDisplayHeight, giftDisplayHeight); // collision box matches display size
 
+        // Add magical sparkles around the gift - Following Phaser.js Framework Priority (Rule 3)
+        this.createGiftSparkles(width * 0.75, giftY);
+
         // Create Puffy and set up collision checking
         this.puffy = new PuffySprite(this);
         this.setupPuffyWhenReady(width, height);
 
-        console.log('✅ Game elements created: Puffy, ground, tiered platforms, and birthday gift');
+        console.log('✅ Game elements created: Puffy, ground, tiered platforms, birthday gift with magical sparkles');
     }
 
     setupPuffyWhenReady(width, height) {
@@ -657,6 +717,12 @@ class GameScene extends Phaser.Scene {
         if (this.invitationShown) return;
         this.invitationShown = true;
         this.physics.pause();
+        
+        // Stop sparkles when gift is collected
+        if (this.giftSparkles) {
+            this.giftSparkles.destroy();
+            this.giftSparkles = null;
+        }
         const { width, height } = this.cameras.main;
         // Remove any old overlay
         if (this.overlayScreen) {
