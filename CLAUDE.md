@@ -210,6 +210,10 @@ hop-hop-puff/
 │   ├── sprite_test.html   # Sprite animation testing
 │   ├── physics_test.html  # Physics and collision testing
 │   └── [other test files] # Additional specialized test files
+├── tmp/                    # ALL temporary files, prototypes, and experiments
+│   ├── prototype_*.html   # Temporary prototype files
+│   ├── experiment_*.js    # Experimental code snippets
+│   └── [temp files]       # Any temporary development files
 ├── .git/hooks/
 │   └── pre-commit         # Pre-commit hook running make test
 ├── .pre-commit-config.yaml # Pre-commit configuration
@@ -307,14 +311,18 @@ hop-hop-puff/
 1. **Visual Verification**: Test the specific feature on both platforms
 2. **Performance Check**: Verify 60 FPS maintained
 3. **Cross-Platform Test**: Ensure change doesn't break other platform
-4. **Pre-Commit Testing**: Git hooks automatically run `make test` before commit
-5. **Commit and Push**: `git add -A && git commit -m "Description" && git push`
+4. **Clean Up Temporary Files**: Move any temp files to `tmp/` directory
+5. **Pre-Commit Testing**: Git hooks automatically run `make test` before commit
+6. **Commit and Push**: `git add -A && git commit -m "Description" && git push`
+7. **Verify Commit Success**: Ensure changes are properly committed and pushed
 
 ### Before Moving to Next Feature
 1. **Full Test Suite**: `make auto-test` for comprehensive testing
 2. **Performance Verification**: `make fps-test` and `make memory-test`
 3. **Mobile Device Test**: Test on actual mobile device
-4. **Documentation Update**: Update test results and known issues
+4. **Clean Up**: Remove or organize temporary files in `tmp/` directory
+5. **Final Commit**: Ensure all working changes are committed and pushed
+6. **Documentation Update**: Update test results and known issues
 
 ## Pre-Commit Testing System
 
@@ -346,12 +354,34 @@ The hooks are automatically configured in `.git/hooks/pre-commit` and include:
 - Mobile-first implementation checks
 - Performance requirement verification
 - Test file organization enforcement
+- Temporary file cleanup verification
+
+## Temporary File Management
+
+### Temporary File Organization
+- **ALL temporary files must go in `tmp/` directory**
+- **Prototypes**: `tmp/prototype_feature_name.html`
+- **Experiments**: `tmp/experiment_description.js`
+- **Debug files**: `tmp/debug_issue_name.html`
+- **Scratch work**: `tmp/scratch_*.html`
+
+### Temporary File Workflow
+1. **Create temporary files in `tmp/`**: Never create temp files in root or other directories
+2. **Use descriptive names**: `tmp/prototype_joystick_v2.html` not `tmp/test.html`
+3. **Clean up regularly**: Remove obsolete temp files before committing
+4. **Promote to permanent**: Move working prototypes to appropriate directories
+
+### Pre-Commit Temporary File Checks
+- Pre-commit hooks verify no temporary files exist in wrong locations
+- Temporary files in `tmp/` are allowed and won't block commits
+- Root directory temporary files will block commits
 
 ## Important Notes
 
 - **Mobile-first approach**: All development prioritizes mobile experience
 - **Test-first development**: Create tests before implementing features
 - **Test organization**: ALL test files must be in `tests/` directory
+- **Temporary files**: ALL temporary files, prototypes, experiments go in `tmp/` directory
 - **Pre-commit testing**: Git hooks run `make test` before allowing commits
 - **No package.json**: Pure HTML5 game using CDN-hosted Phaser.js
 - **Cache-busting**: Essential for mobile browsers and game asset updates

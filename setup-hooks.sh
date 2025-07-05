@@ -33,11 +33,25 @@ if [ ! -d "tests" ]; then
     echo "✅ Tests directory created"
 fi
 
+# Check if tmp directory exists
+if [ ! -d "tmp" ]; then
+    echo "📁 Creating tmp directory..."
+    mkdir -p tmp
+    echo "✅ Tmp directory created"
+fi
+
 # Move any test files from root to tests directory
 if ls *test*.html 1> /dev/null 2>&1; then
     echo "📦 Moving test files to tests directory..."
     mv *test*.html tests/
     echo "✅ Test files moved to tests/"
+fi
+
+# Move any temporary files from root to tmp directory
+if ls prototype_*.html experiment_*.js debug_*.html scratch_* temp_* 1> /dev/null 2>&1; then
+    echo "📦 Moving temporary files to tmp directory..."
+    mv prototype_*.html experiment_*.js debug_*.html scratch_* temp_* tmp/ 2>/dev/null || true
+    echo "✅ Temporary files moved to tmp/"
 fi
 
 # Test the make test command
@@ -74,6 +88,14 @@ else
     echo "✅ Test files properly organized in tests/"
 fi
 
+# Check temporary file organization
+if find . -maxdepth 1 -name "prototype_*.html" -o -name "experiment_*.js" -o -name "debug_*.html" -o -name "scratch_*" -o -name "temp_*" -type f | grep -q .; then
+    echo "❌ WARNING: Temporary files found in root directory"
+    echo "   Move them to tmp/ directory"
+else
+    echo "✅ Temporary files properly organized in tmp/"
+fi
+
 echo ""
 echo "🎉 Pre-commit hook setup complete!"
 echo ""
@@ -88,4 +110,8 @@ echo "  make test              # Run comprehensive test suite"
 echo "  make mobile-test       # Test mobile functionality"
 echo "  make visual-test       # Test visual rendering"
 echo ""
-echo "The hook will prevent commits if tests fail!" 
+echo "File organization:"
+echo "  tests/                 # All test files go here"
+echo "  tmp/                   # All temporary files go here"
+echo ""
+echo "The hook will prevent commits if tests fail or files are misorganized!" 

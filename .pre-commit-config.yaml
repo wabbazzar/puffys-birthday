@@ -20,6 +20,15 @@ repos:
         description: "Ensure all test files are in tests/ directory"
         stages: [commit]
         
+      - id: check-temp-directory
+        name: Check Temporary Files Location
+        entry: bash -c 'if find . -maxdepth 1 -name "prototype_*.html" -o -name "experiment_*.js" -o -name "debug_*.html" -o -name "scratch_*" -o -name "temp_*" -type f | grep -q .; then echo "❌ Temporary files found in root directory. Move to tmp/ directory"; exit 1; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+        description: "Ensure all temporary files are in tmp/ directory"
+        stages: [commit]
+        
       - id: mobile-first-check
         name: Mobile-First Implementation Check
         entry: bash -c 'if git diff --cached --name-only | grep -E "\.(js|css|html)$" | xargs grep -l "desktop" | xargs grep -qv "mobile"; then echo "⚠️  Warning: Desktop-only code detected. Ensure mobile-first implementation."; fi'

@@ -1,4 +1,4 @@
-.PHONY: serve game-test mobile-test visual-test touch-test sprite-test device-test verify-render clean-cache debug-render auto-test pwa-test start-server stop-server test-game check-logs full-test test pre-commit-test setup-hooks
+.PHONY: serve game-test mobile-test visual-test touch-test sprite-test device-test verify-render clean-cache debug-render auto-test pwa-test start-server stop-server test-game check-logs full-test test pre-commit-test setup-hooks cleanup
 
 # Comprehensive test command for pre-commit hooks
 test: start-server
@@ -189,6 +189,15 @@ setup-hooks:
 	@echo "🔧 Setting up pre-commit hooks..."
 	@./setup-hooks.sh
 
+# Clean up temporary files and organize project
+cleanup:
+	@echo "🧹 Cleaning up project organization..."
+	@mkdir -p tests tmp
+	@echo "📁 Directories created: tests/, tmp/"
+	@if ls *test*.html 1> /dev/null 2>&1; then mv *test*.html tests/ && echo "✅ Test files moved to tests/"; fi
+	@if ls prototype_*.html experiment_*.js debug_*.html scratch_* temp_* 1> /dev/null 2>&1; then mv prototype_*.html experiment_*.js debug_*.html scratch_* temp_* tmp/ 2>/dev/null || true && echo "✅ Temporary files moved to tmp/"; fi
+	@echo "🎯 Project organization complete!"
+
 # Show all available commands
 help:
 	@echo "🐱 Hop Hop Puff - Cross-Platform Game Development Commands"
@@ -222,11 +231,16 @@ help:
 	@echo "Utilities:"
 	@echo "  make setup         Show development setup information"
 	@echo "  make setup-hooks   Set up pre-commit testing hooks"
+	@echo "  make cleanup       Clean up and organize project files"
 	@echo "  make help          Show this help message"
 	@echo ""
 	@echo "Pre-Commit Testing:"
 	@echo "  make test          Run comprehensive test suite (used by pre-commit)"
 	@echo "  make pre-commit-test  Alias for make test"
+	@echo ""
+	@echo "File Organization:"
+	@echo "  tests/             All test files go here"
+	@echo "  tmp/               All temporary files go here"
 	@echo ""
 	@echo "🚀 Quick Start: make serve && make mobile-test"
 

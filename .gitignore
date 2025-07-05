@@ -1,0 +1,60 @@
+# Hop Hop Puff - Git Ignore Rules
+
+# Temporary files and prototypes
+tmp/
+*.tmp
+*.temp
+*~
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Development server logs
+server.log
+*.log
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node modules (if any future dependencies)
+node_modules/
+
+# Cache files
+.cache/
+*.cache
+
+# Build artifacts (if any future build process)
+dist/
+build/
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+
+# Python cache (for development server)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Backup files
+*.bak
+*.backup
+
+# Test artifacts that shouldn't be committed
+tests/temp_*
+tests/scratch_*
+
+# Keep tmp directory but ignore its contents
+tmp/*
+!tmp/.gitkeep 
