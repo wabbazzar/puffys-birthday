@@ -585,29 +585,31 @@ class GameScene extends Phaser.Scene {
             }
         };
         
-        // Level 1: 3 blocks on left side (lowest tier)
-        createPlatform(width * 0.25, height - 100);
+        // Platform positions using grid coordinates:
+        // Platform 1: B16-D16 (bottom) - Center at C16 = 64px, Row 16 = 512px
+        createPlatform(64, 512);
 
-        // Level 2: 3 blocks on right side, higher
-        createPlatform(width * 0.75, height - 140);
+        // Platform 2: G15-I15 (second from bottom) - Center at H15 = 224px, Row 15 = 480px  
+        createPlatform(224, 480);
 
-        // Level 3: 3 blocks on left side, even higher
-        createPlatform(width * 0.25, height - 180);
+        // Platform 3: B14-D14 (third level) - Center at C14 = 64px, Row 14 = 448px
+        createPlatform(64, 448);
 
-        // Level 4: 3 blocks on right side, highest tier
-        createPlatform(width * 0.75, height - 220);
+        // Platform 4: G13-I13 (top platform) - Center at H13 = 224px, Row 13 = 416px
+        createPlatform(224, 416);
         
-        // Store the top platform position for gift placement
-        this.topPlatformY = height - 220;
+        // Store the top platform position for gift placement (G13-I13 platform)
+        this.topPlatformX = 224; // Center of H13 (G13-I13 platform)
+        this.topPlatformY = 416;  // Row 13
 
-        // Add birthday gift on top platform (Level 4)
+        // Add birthday gift on top platform (G13-I13)
         // Make the gift much smaller and align its bottom with the top of the platform
         const giftScale = 0.1;
         const giftImage = this.textures.get('gift').getSourceImage();
         const giftDisplayHeight = giftImage.height * giftScale;
-        const level4Top = this.topPlatformY - 12; // platforms are 24px tall, so top is y-12
-        const giftY = level4Top - giftDisplayHeight / 2 + giftDisplayHeight * 0.10; // sink by 10%
-        this.gift = this.add.image(width * 0.75, giftY, 'gift');
+        const platformTop = this.topPlatformY - 12; // platforms are 24px tall, so top is y-12
+        const giftY = platformTop - giftDisplayHeight / 2 + giftDisplayHeight * 0.10; // sink by 10%
+        this.gift = this.add.image(this.topPlatformX, giftY, 'gift');
         this.gift.setScale(giftScale);
         this.physics.add.existing(this.gift, true); // STATIC body
         this.gift.body.setSize(giftDisplayHeight, giftDisplayHeight); // collision box matches display size
