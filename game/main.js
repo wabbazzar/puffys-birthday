@@ -624,8 +624,9 @@ class GameScene extends Phaser.Scene {
         this.groundGraphics = this.add.graphics();
         this.groundGraphics.setDepth(-50); // Behind platforms but above background
         
-        const groundY = height - 60;
-        const groundHeight = 60;
+        // Ground only occupies row 18 of the grid (24px at bottom)
+        const groundY = height - 24;  // Row 18 starts at 544px (568-24)
+        const groundHeight = 24;      // Row 18 is 24px tall
         
         // Main ground color - warm grey to match kitchen tones
         const groundColor = 0x8B7D6B; // Warm grey-brown
@@ -671,18 +672,17 @@ class GameScene extends Phaser.Scene {
         this.groundGraphics.lineTo(width, height);
         this.groundGraphics.strokePath();
         
-        // Add subtle texture lines
+        // Add subtle texture lines (fewer for thinner ground)
         this.groundGraphics.lineStyle(1, shadowColor, 0.2);
-        for (let i = 1; i < 4; i++) {
-            const y = groundY + (groundHeight / 4) * i;
-            this.groundGraphics.beginPath();
-            this.groundGraphics.moveTo(0, y);
-            this.groundGraphics.lineTo(width, y);
-            this.groundGraphics.strokePath();
-        }
+        // Only add one texture line in the middle for thin ground
+        const y = groundY + (groundHeight / 2);
+        this.groundGraphics.beginPath();
+        this.groundGraphics.moveTo(0, y);
+        this.groundGraphics.lineTo(width, y);
+        this.groundGraphics.strokePath();
         
         // Create invisible physics ground (same dimensions as visual)
-        this.ground = this.add.rectangle(width * 0.5, height - 30, width, 60, 0x000000, 0);
+        this.ground = this.add.rectangle(width * 0.5, height - 12, width, 24, 0x000000, 0);
         this.physics.add.existing(this.ground, true); // Static body
         
         console.log('✅ Styled ground created with embossed effects');

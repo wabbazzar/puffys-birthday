@@ -1,5 +1,0 @@
-127.0.0.1 - - [05/Jul/2025 14:51:37] "GET /index.html HTTP/1.1" 200 -
-127.0.0.1 - - [05/Jul/2025 14:51:37] "GET /game/sprites/PuffySprite.js HTTP/1.1" 200 -
-127.0.0.1 - - [05/Jul/2025 14:51:37] "GET /styles/desktop.css HTTP/1.1" 200 -
-127.0.0.1 - - [05/Jul/2025 14:51:37] "GET /styles/mobile.css HTTP/1.1" 200 -
-127.0.0.1 - - [05/Jul/2025 14:51:37] "GET /game/main.js HTTP/1.1" 200 -
