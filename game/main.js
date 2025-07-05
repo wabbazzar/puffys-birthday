@@ -585,24 +585,26 @@ class GameScene extends Phaser.Scene {
             }
         };
         
-        // Platform positions using grid coordinates:
-        // Platform 1: B16-D16 (bottom) - Center at C16 = 64px, Row 16 = 512px
-        createPlatform(64, 512);
-
-        // Platform 2: G15-I15 (second from bottom) - Center at H15 = 224px, Row 15 = 480px  
-        createPlatform(224, 480);
-
-        // Platform 3: B14-D14 (third level) - Center at C14 = 64px, Row 14 = 448px
-        createPlatform(64, 448);
-
-        // Platform 4: G13-I13 (top platform) - Center at H13 = 224px, Row 13 = 416px
-        createPlatform(224, 416);
+        // Platform positions using symmetric grid coordinates:
+        // Mirror layout: left platforms 1 cell from left border, right platforms 1 cell from right border
         
-        // Store the top platform position for gift placement (G13-I13 platform)
-        this.topPlatformX = 224; // Center of H13 (G13-I13 platform)
-        this.topPlatformY = 416;  // Row 13
+        // Platform 1: A16-C16 (bottom left) - Center at B = 32px, Row 16 = 512px
+        createPlatform(32, 512);
 
-        // Add birthday gift on top platform (G13-I13)
+        // Platform 2: H15-J15 (second from bottom right) - Center at I = 288px, Row 15 = 480px  
+        createPlatform(288, 480);
+
+        // Platform 3: A13.5-C13.5 (third level left) - Center at B = 32px, Row 13.5 = 432px (up half cell)
+        createPlatform(32, 432);
+
+        // Platform 4: H12.5-J12.5 (top right) - Center at I = 288px, Row 12.5 = 400px (up half cell)
+        createPlatform(288, 400);
+        
+        // Store the top platform position for gift placement (H12.5-J12.5 platform)
+        this.topPlatformX = 288; // Center of I (H12.5-J12.5 platform)
+        this.topPlatformY = 400;  // Row 12.5
+
+        // Add birthday gift on top platform (H12.5-J12.5)
         // Make the gift much smaller and align its bottom with the top of the platform
         const giftScale = 0.1;
         const giftImage = this.textures.get('gift').getSourceImage();
