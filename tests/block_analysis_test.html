@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Analysis Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #2a2a2a;
+            color: white;
+        }
+        #canvas-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        canvas {
+            border: 2px solid #666;
+            background: #444;
+            image-rendering: pixelated;
+        }
+        #results {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: monospace;
+        }
+        .highlight {
+            color: #00ff00;
+            font-weight: bold;
+        }
+        #debug-info {
+            background: #222;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Block Sprite Analysis</h1>
+    <p>This test analyzes the block.png sprite to find the actual non-transparent content boundaries.</p>
+    
+    <div id="canvas-container">
+        <div>
+            <h3>Original Block</h3>
+            <canvas id="original-canvas"></canvas>
+        </div>
+        <div>
+            <h3>Content Boundaries</h3>
+            <canvas id="analysis-canvas"></canvas>
+        </div>
+        <div>
+            <h3>3 Blocks Side-by-Side</h3>
+            <canvas id="placement-canvas"></canvas>
+        </div>
+    </div>
+    
+    <div id="results">
+        <h3>Analysis Results:</h3>
+        <div id="results-content">Loading block.png...</div>
+    </div>
+    
+    <div id="debug-info">
+        <h3>Debug Information:</h3>
+        <div id="debug-content"></div>
+    </div>
+
+    <script>
+        const img = new Image();
+        img.onload = function() {
+            analyzeBlock();
+        };
+        img.onerror = function() {
+            document.getElementById('results-content').innerHTML = 
+                '<span style="color: red;">Error loading block.png!</span>';
+        };
+        img.src = '../assets/block.png';
+
+        function analyzeBlock() {
+            const originalCanvas = document.getElementById('original-canvas');
+            const analysisCanvas = document.getElementById('analysis-canvas');
+            const placementCanvas = document.getElementById('placement-canvas');
+            
+            // Setup canvases
+            originalCanvas.width = img.width;
+            originalCanvas.height = img.height;
+            analysisCanvas.width = img.width;
+            analysisCanvas.height = img.height;
+            
+            const origCtx = originalCanvas.getContext('2d');
+            const analCtx = analysisCanvas.getContext('2d');
+            
+            // Draw original
+            origCtx.drawImage(img, 0, 0);
+            
+            // Get image data for analysis
+            const imageData = origCtx.getImageData(0, 0, img.width, img.height);
+            const data = imageData.data;
+            
+            // Find content boundaries
+            let minX = img.width;
+            let maxX = 0;
+            let minY = img.height;
+            let maxY = 0;
+            
+            // Scan all pixels
+            for (let y = 0; y < img.height; y++) {
+                for (let x = 0; x < img.width; x++) {
+                    const idx = (y * img.width + x) * 4;
+                    const alpha = data[idx + 3];
+                    
+                    // If pixel is not fully transparent
+                    if (alpha > 0) {
+                        minX = Math.min(minX, x);
+                        maxX = Math.max(maxX, x);
+                        minY = Math.min(minY, y);
+                        maxY = Math.max(maxY, y);
+                    }
+                }
+            }
+            
+            // Calculate content dimensions
+            const contentWidth = maxX - minX + 1;
+            const contentHeight = maxY - minY + 1;
+            
+            // Draw analysis visualization
+            analCtx.drawImage(img, 0, 0);
+            analCtx.strokeStyle = '#00ff00';
+            analCtx.lineWidth = 2;
+            analCtx.strokeRect(minX, minY, contentWidth, contentHeight);
+            
+            // Draw boundary lines
+            analCtx.strokeStyle = '#ff0000';
+            analCtx.lineWidth = 1;
+            analCtx.beginPath();
+            analCtx.moveTo(minX, 0);
+            analCtx.lineTo(minX, img.height);
+            analCtx.moveTo(maxX + 1, 0);
+            analCtx.lineTo(maxX + 1, img.height);
+            analCtx.moveTo(0, minY);
+            analCtx.lineTo(img.width, minY);
+            analCtx.moveTo(0, maxY + 1);
+            analCtx.lineTo(img.width, maxY + 1);
+            analCtx.stroke();
+            
+            // Test 3 blocks side-by-side with content dimensions
+            const scale = 24 / contentHeight; // Scale to 24px height
+            const scaledContentWidth = contentWidth * scale;
+            const scaledContentHeight = 24;
+            
+            placementCanvas.width = scaledContentWidth * 3;
+            placementCanvas.height = scaledContentHeight;
+            const placeCtx = placementCanvas.getContext('2d');
+            placeCtx.imageSmoothingEnabled = false;
+            
+            // Draw 3 blocks using content dimensions
+            for (let i = 0; i < 3; i++) {
+                placeCtx.drawImage(img, 
+                    minX, minY, contentWidth, contentHeight,  // Source (content only)
+                    i * scaledContentWidth, 0, scaledContentWidth, scaledContentHeight  // Destination
+                );
+            }
+            
+            // Display results
+            const results = `
+                <p><strong>Image Dimensions:</strong> ${img.width} x ${img.height} pixels</p>
+                <p><strong>Content Boundaries:</strong></p>
+                <ul>
+                    <li>Left edge: <span class="highlight">${minX}px</span></li>
+                    <li>Right edge: <span class="highlight">${maxX}px</span></li>
+                    <li>Top edge: <span class="highlight">${minY}px</span></li>
+                    <li>Bottom edge: <span class="highlight">${maxY}px</span></li>
+                </ul>
+                <p><strong>Content Dimensions:</strong> <span class="highlight">${contentWidth} x ${contentHeight} pixels</span></p>
+                <p><strong>Transparent Padding:</strong></p>
+                <ul>
+                    <li>Left: ${minX}px</li>
+                    <li>Right: ${img.width - maxX - 1}px</li>
+                    <li>Top: ${minY}px</li>
+                    <li>Bottom: ${img.height - maxY - 1}px</li>
+                </ul>
+                <p><strong>Scaling for 24px height:</strong></p>
+                <ul>
+                    <li>Scale factor: <span class="highlight">${scale.toFixed(3)}</span></li>
+                    <li>Scaled content width: <span class="highlight">${scaledContentWidth.toFixed(1)}px</span></li>
+                    <li>3 blocks total width: <span class="highlight">${(scaledContentWidth * 3).toFixed(1)}px</span></li>
+                </ul>
+                <p><strong>Code to use in game:</strong></p>
+                <pre>
+// Content offset from image origin
+const contentOffsetX = ${minX};
+const contentOffsetY = ${minY};
+const contentWidth = ${contentWidth};
+const contentHeight = ${contentHeight};
+
+// When placing blocks side-by-side:
+const scaledContentWidth = contentWidth * blockScale;
+const blockX = centerX - (1.5 * scaledContentWidth) + (i * scaledContentWidth);
+                </pre>
+            `;
+            
+            document.getElementById('results-content').innerHTML = results;
+            
+            // Debug info
+            const debugInfo = `
+                <p>Canvas scale test: ${placementCanvas.width}px x ${placementCanvas.height}px</p>
+                <p>Original placement width (60px rectangle): 60px</p>
+                <p>New placement width (3 blocks): ${(scaledContentWidth * 3).toFixed(1)}px</p>
+                <p>Difference: ${((scaledContentWidth * 3) - 60).toFixed(1)}px wider</p>
+            `;
+            document.getElementById('debug-content').innerHTML = debugInfo;
+        }
+    </script>
+</body>
+</html>

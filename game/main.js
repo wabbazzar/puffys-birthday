@@ -524,53 +524,69 @@ class GameScene extends Phaser.Scene {
         
         // Get block dimensions from loaded texture
         const blockTexture = this.textures.get('block').getSourceImage();
-        const blockWidth = blockTexture.width;
-        const blockHeight = blockTexture.height;
-        const blockScale = 24 / blockHeight; // Scale to maintain 24px height
-        const scaledBlockWidth = blockWidth * blockScale;
         
-        // Level 1: 3 blocks on left side (lowest tier) - adjusted for taller ground
-        const level1CenterX = width * 0.25;
-        const level1Y = height - 100;
-        for (let i = 0; i < 3; i++) {
-            const blockX = level1CenterX - scaledBlockWidth + (i * scaledBlockWidth);
-            const block = this.add.image(blockX, level1Y, 'block').setScale(blockScale);
-            this.physics.add.existing(block, true);
-            this.platforms.add(block);
+        // Analyze block to find content boundaries (non-transparent area)
+        // This is needed because block.png has transparent padding
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = blockTexture.width;
+        canvas.height = blockTexture.height;
+        ctx.drawImage(blockTexture, 0, 0);
+        
+        const imageData = ctx.getImageData(0, 0, blockTexture.width, blockTexture.height);
+        const data = imageData.data;
+        
+        // Find content boundaries
+        let minX = blockTexture.width;
+        let maxX = 0;
+        let minY = blockTexture.height;
+        let maxY = 0;
+        
+        for (let y = 0; y < blockTexture.height; y++) {
+            for (let x = 0; x < blockTexture.width; x++) {
+                const idx = (y * blockTexture.width + x) * 4;
+                const alpha = data[idx + 3];
+                if (alpha > 0) {
+                    minX = Math.min(minX, x);
+                    maxX = Math.max(maxX, x);
+                    minY = Math.min(minY, y);
+                    maxY = Math.max(maxY, y);
+                }
+            }
         }
+        
+        // Calculate actual content dimensions
+        const contentWidth = maxX - minX + 1;
+        const contentHeight = maxY - minY + 1;
+        const blockScale = 24 / contentHeight; // Scale to maintain 24px height
+        const scaledContentWidth = contentWidth * blockScale;
+        
+        // Helper function to create a platform of 3 blocks
+        const createPlatform = (centerX, centerY) => {
+            // Position blocks so they touch at content boundaries
+            for (let i = 0; i < 3; i++) {
+                // Calculate position for snug fit using content width
+                const blockX = centerX - (1.5 * scaledContentWidth) + (i * scaledContentWidth);
+                const block = this.add.image(blockX, centerY, 'block').setScale(blockScale);
+                this.physics.add.existing(block, true);
+                this.platforms.add(block);
+            }
+        };
+        
+        // Level 1: 3 blocks on left side (lowest tier)
+        createPlatform(width * 0.25, height - 100);
 
-        // Level 2: 3 blocks on right side, higher - adjusted for taller ground
-        const level2CenterX = width * 0.75;
-        const level2Y = height - 140;
-        for (let i = 0; i < 3; i++) {
-            const blockX = level2CenterX - scaledBlockWidth + (i * scaledBlockWidth);
-            const block = this.add.image(blockX, level2Y, 'block').setScale(blockScale);
-            this.physics.add.existing(block, true);
-            this.platforms.add(block);
-        }
+        // Level 2: 3 blocks on right side, higher
+        createPlatform(width * 0.75, height - 140);
 
-        // Level 3: 3 blocks on left side, even higher - adjusted for taller ground
-        const level3CenterX = width * 0.25;
-        const level3Y = height - 180;
-        for (let i = 0; i < 3; i++) {
-            const blockX = level3CenterX - scaledBlockWidth + (i * scaledBlockWidth);
-            const block = this.add.image(blockX, level3Y, 'block').setScale(blockScale);
-            this.physics.add.existing(block, true);
-            this.platforms.add(block);
-        }
+        // Level 3: 3 blocks on left side, even higher
+        createPlatform(width * 0.25, height - 180);
 
-        // Level 4: 3 blocks on right side, highest tier - adjusted for taller ground
-        const level4CenterX = width * 0.75;
-        const level4Y = height - 220;
-        for (let i = 0; i < 3; i++) {
-            const blockX = level4CenterX - scaledBlockWidth + (i * scaledBlockWidth);
-            const block = this.add.image(blockX, level4Y, 'block').setScale(blockScale);
-            this.physics.add.existing(block, true);
-            this.platforms.add(block);
-        }
+        // Level 4: 3 blocks on right side, highest tier
+        createPlatform(width * 0.75, height - 220);
         
         // Store the top platform position for gift placement
-        this.topPlatformY = level4Y;
+        this.topPlatformY = height - 220;
 
         // Add birthday gift on top platform (Level 4)
         // Make the gift much smaller and align its bottom with the top of the platform
