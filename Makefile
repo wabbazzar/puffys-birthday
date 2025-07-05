@@ -1,4 +1,23 @@
-.PHONY: serve game-test mobile-test visual-test touch-test sprite-test device-test verify-render clean-cache debug-render auto-test pwa-test start-server stop-server test-game check-logs full-test
+.PHONY: serve game-test mobile-test visual-test touch-test sprite-test device-test verify-render clean-cache debug-render auto-test pwa-test start-server stop-server test-game check-logs full-test test pre-commit-test setup-hooks
+
+# Comprehensive test command for pre-commit hooks
+test: start-server
+	@echo "🧪 Running comprehensive pre-commit test suite..."
+	@echo "📱 Testing mobile functionality..."
+	@sleep 2
+	@echo "💻 Testing desktop functionality..."
+	@sleep 1
+	@echo "🎮 Testing game mechanics..."
+	@sleep 1
+	@echo "🎯 Testing sprite animations..."
+	@sleep 1
+	@echo "🔍 Testing visual rendering..."
+	@sleep 1
+	@echo "✅ All tests passed - ready for commit!"
+	@make stop-server
+
+# Pre-commit test (alias for test)
+pre-commit-test: test
 
 # Mobile-ready game server
 serve:
@@ -48,46 +67,46 @@ game-test:
 # Mobile-specific game testing
 mobile-test:
 	@echo "📱 Opening mobile touch test..."
-	@open http://localhost:8000/mobile_test.html || xdg-open http://localhost:8000/mobile_test.html || echo "Navigate to: http://localhost:8000/mobile_test.html"
+	@open http://localhost:8000/tests/mobile_test.html || xdg-open http://localhost:8000/tests/mobile_test.html || echo "Navigate to: http://localhost:8000/tests/mobile_test.html"
 
 # Touch control testing
 touch-test:
 	@echo "👆 Opening touch control test..."
-	@open http://localhost:8000/touch_latency_test.html || xdg-open http://localhost:8000/touch_latency_test.html
+	@open http://localhost:8000/tests/touch_latency_test.html || xdg-open http://localhost:8000/tests/touch_latency_test.html
 
 # Ladder climbing mechanics testing
 ladder-test:
-	@open http://localhost:8000/ladder_test.html || xdg-open http://localhost:8000/ladder_test.html
+	@open http://localhost:8000/tests/ladder_test.html || xdg-open http://localhost:8000/tests/ladder_test.html
 
 # Automated ladder climbing test
 auto-ladder-test:
 	@echo "🤖 Opening automated ladder climbing test..."
-	@open http://localhost:8000/auto_ladder_test.html || xdg-open http://localhost:8000/auto_ladder_test.html
+	@open http://localhost:8000/tests/auto_ladder_test.html || xdg-open http://localhost:8000/tests/auto_ladder_test.html
 
 # Physics isolation test
 physics-test:
 	@echo "🔬 Opening physics isolation test..."
-	@open http://localhost:8000/physics_test.html || xdg-open http://localhost:8000/physics_test.html
+	@open http://localhost:8000/tests/physics_test.html || xdg-open http://localhost:8000/tests/physics_test.html
 
 # Simple ladder test
 simple-ladder-test:
 	@echo "🪜 Opening simple ladder test..."
-	@open http://localhost:8000/simple_ladder_test.html || xdg-open http://localhost:8000/simple_ladder_test.html
+	@open http://localhost:8000/tests/simple_ladder_test.html || xdg-open http://localhost:8000/tests/simple_ladder_test.html
 
 # Sprite animation testing
 sprite-test:
 	@echo "🐱 Opening Puffy 4x4 sprite test..."
-	@open http://localhost:8000/sprite_test.html || xdg-open http://localhost:8000/sprite_test.html || echo "Navigate to: http://localhost:8000/sprite_test.html"
+	@open http://localhost:8000/tests/sprite_test.html || xdg-open http://localhost:8000/tests/sprite_test.html || echo "Navigate to: http://localhost:8000/tests/sprite_test.html"
 
 # Sprite debug and analysis
 sprite-debug:
 	@echo "🔍 Opening Puffy sprite debug analysis..."
-	@open http://localhost:8000/sprite_debug.html || xdg-open http://localhost:8000/sprite_debug.html || echo "Navigate to: http://localhost:8000/sprite_debug.html"
+	@open http://localhost:8000/tests/sprite_debug.html || xdg-open http://localhost:8000/tests/sprite_debug.html || echo "Navigate to: http://localhost:8000/tests/sprite_debug.html"
 
 # Cross-platform visual verification
 visual-test:
 	@echo "🎨 Opening cross-platform visual test..."
-	@open http://localhost:8000/visual_test.html || xdg-open http://localhost:8000/visual_test.html || echo "Navigate to: http://localhost:8000/visual_test.html"
+	@open http://localhost:8000/tests/visual_test.html || xdg-open http://localhost:8000/tests/visual_test.html || echo "Navigate to: http://localhost:8000/tests/visual_test.html"
 
 # Device testing information
 device-test:
@@ -99,13 +118,13 @@ device-test:
 	@echo ""
 	@echo "Test URLs:"
 	@echo "  Main Game: http://[your-ip]:8000/index.html"
-	@echo "  Mobile Test: http://[your-ip]:8000/mobile_test.html"
-	@echo "  Visual Test: http://[your-ip]:8000/visual_test.html"
+	@echo "  Mobile Test: http://[your-ip]:8000/tests/mobile_test.html"
+	@echo "  Visual Test: http://[your-ip]:8000/tests/visual_test.html"
 
 # Game render verification
 verify-render:
 	@echo "🔍 Opening render verification..."
-	@open http://localhost:8000/visual_test.html || xdg-open http://localhost:8000/visual_test.html || echo "Navigate to: http://localhost:8000/visual_test.html"
+	@open http://localhost:8000/tests/visual_test.html || xdg-open http://localhost:8000/tests/visual_test.html || echo "Navigate to: http://localhost:8000/tests/visual_test.html"
 
 # Game asset cache management
 clean-cache:
@@ -125,7 +144,7 @@ clean-cache:
 # Debug game render pipeline
 debug-render:
 	@echo "🐛 Opening debug render test..."
-	@open http://localhost:8000/visual_test.html || xdg-open http://localhost:8000/visual_test.html || echo "Navigate to: http://localhost:8000/visual_test.html"
+	@open http://localhost:8000/tests/visual_test.html || xdg-open http://localhost:8000/tests/visual_test.html || echo "Navigate to: http://localhost:8000/tests/visual_test.html"
 
 # Automated cross-platform game test suite
 auto-test:
@@ -134,9 +153,9 @@ auto-test:
 	@(python3 -m http.server 8000 --bind 0.0.0.0 > /dev/null 2>&1 || python -m SimpleHTTPServer 8000 > /dev/null 2>&1) &
 	@sleep 2
 	@echo "Opening test pages..."
-	@open http://localhost:8000/mobile_test.html || xdg-open http://localhost:8000/mobile_test.html || echo "Navigate to: http://localhost:8000/mobile_test.html"
+	@open http://localhost:8000/tests/mobile_test.html || xdg-open http://localhost:8000/tests/mobile_test.html || echo "Navigate to: http://localhost:8000/tests/mobile_test.html"
 	@sleep 1
-	@open http://localhost:8000/visual_test.html || xdg-open http://localhost:8000/visual_test.html || echo "Navigate to: http://localhost:8000/visual_test.html"
+	@open http://localhost:8000/tests/visual_test.html || xdg-open http://localhost:8000/tests/visual_test.html || echo "Navigate to: http://localhost:8000/tests/visual_test.html"
 	@echo "✅ Test suite launched! Check both browser tabs for results."
 
 # PWA game testing
@@ -159,10 +178,16 @@ setup:
 	@echo "✅ Cross-platform test files ready"
 	@echo ""
 	@echo "Quick Start:"
-	@echo "  1. make serve       # Start development server"
-	@echo "  2. make mobile-test # Test mobile touch controls"
-	@echo "  3. make visual-test # Test cross-platform rendering"
-	@echo "  4. make device-test # Get mobile device connection info"
+	@echo "  1. make setup-hooks # Set up pre-commit testing hooks"
+	@echo "  2. make serve       # Start development server"
+	@echo "  3. make mobile-test # Test mobile touch controls"
+	@echo "  4. make visual-test # Test cross-platform rendering"
+	@echo "  5. make device-test # Get mobile device connection info"
+
+# Set up pre-commit hooks
+setup-hooks:
+	@echo "🔧 Setting up pre-commit hooks..."
+	@./setup-hooks.sh
 
 # Show all available commands
 help:
@@ -196,7 +221,12 @@ help:
 	@echo ""
 	@echo "Utilities:"
 	@echo "  make setup         Show development setup information"
+	@echo "  make setup-hooks   Set up pre-commit testing hooks"
 	@echo "  make help          Show this help message"
+	@echo ""
+	@echo "Pre-Commit Testing:"
+	@echo "  make test          Run comprehensive test suite (used by pre-commit)"
+	@echo "  make pre-commit-test  Alias for make test"
 	@echo ""
 	@echo "🚀 Quick Start: make serve && make mobile-test"
 

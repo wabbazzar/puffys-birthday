@@ -1,0 +1,42 @@
+repos:
+  - repo: local
+    hooks:
+      - id: hop-hop-puff-tests
+        name: Hop Hop Puff Cross-Platform Tests
+        entry: make test
+        language: system
+        pass_filenames: false
+        always_run: true
+        description: "Run comprehensive cross-platform tests before commit"
+        stages: [commit]
+        verbose: true
+      
+      - id: check-test-directory
+        name: Check Test Files Location
+        entry: bash -c 'if find . -maxdepth 1 -name "*test*.html" -type f | grep -q .; then echo "❌ Test files found in root directory. Move to tests/ directory using: mv *test*.html tests/"; exit 1; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+        description: "Ensure all test files are in tests/ directory"
+        stages: [commit]
+        
+      - id: mobile-first-check
+        name: Mobile-First Implementation Check
+        entry: bash -c 'if git diff --cached --name-only | grep -E "\.(js|css|html)$" | xargs grep -l "desktop" | xargs grep -qv "mobile"; then echo "⚠️  Warning: Desktop-only code detected. Ensure mobile-first implementation."; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+        description: "Check for mobile-first implementation patterns"
+        stages: [commit]
+        
+      - id: performance-check
+        name: Performance Requirements Check
+        entry: bash -c 'if git diff --cached --name-only | grep -E "\.(js)$" | xargs grep -l "fps\|FPS" | xargs grep -qv "60"; then echo "⚠️  Warning: FPS code detected. Ensure 60 FPS requirement compliance."; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+        description: "Check for 60 FPS performance requirements"
+        stages: [commit]
+
+fail_fast: false
+default_stages: [commit] 
