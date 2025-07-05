@@ -470,6 +470,7 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('gift', 'assets/gift.png');
         this.load.image('puffy_winks', 'assets/puffy_winks.png');
         this.load.image('block', 'assets/block.png');
+        this.load.image('background', 'assets/background.png');
 
         // Note: PuffySprite handles its own loading
         // Basic assets loaded here for birthday feature
@@ -520,6 +521,12 @@ class GameScene extends Phaser.Scene {
     }
 
     setupGameElements(width, height) {
+        // Add kitchen background with subtle opacity
+        this.background = this.add.image(width * 0.5, height * 0.5, 'background');
+        this.background.setDisplaySize(width, height); // Scale to fit game dimensions
+        this.background.setAlpha(0.4); // 40% opacity for subtle background effect
+        this.background.setDepth(-100); // Ensure it's behind everything
+        
         // Create ground (simple green rectangle) - 50% taller to accommodate mobile controls
         this.ground = this.add.rectangle(width * 0.5, height - 30, width, 60, 0x228B22);
         this.physics.add.existing(this.ground, true); // Static body
