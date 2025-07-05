@@ -75,11 +75,39 @@
         text-align: center;
     }
     
+    .grid-button {
+        background: #666;
+        border: 1px solid var(--primary-color);
+        border-radius: 5px;
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-top: 8px;
+        padding: 6px 12px;
+        transition: all 0.2s ease;
+        width: 100%;
+    }
+    
+    .grid-button:hover {
+        background: #777;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        transform: translateY(-1px);
+    }
+    
+    .grid-button:active {
+        transform: translateY(0);
+    }
+    
     /* === GAME CONTAINER ADJUSTMENTS === */
     .game-container {
         /* Give more space for the game on desktop */
         width: 100%;
         height: 100vh;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     
     /* === ENHANCED VISUAL EFFECTS === */

@@ -503,6 +503,11 @@ class GameScene extends Phaser.Scene {
         this.gift = null; // Birthday gift sprite
         this.overlayScreen = null; // Birthday invitation overlay
         this.invitationShown = false; // Track if invitation has been shown
+        
+        // Development grid overlay
+        this.showGrid = false; // Grid toggle state
+        this.gridGraphics = null; // Grid graphics object
+        this.isMobile = 'ontouchstart' in window; // Detect mobile
     }
     
     create() {
@@ -511,6 +516,7 @@ class GameScene extends Phaser.Scene {
 
         this.setupGameElements(width, height);
         this.setupKeyboardControls();
+        this.setupDevGrid(width, height);
     }
 
     setupGameElements(width, height) {
@@ -645,12 +651,139 @@ class GameScene extends Phaser.Scene {
 
     setupKeyboardControls() {
         this.cursors = this.input.keyboard.addKeys('W,S,A,D');
+        
+        // Add grid toggle key (G key) - desktop only
+        if (!this.isMobile) {
+            this.gridKey = this.input.keyboard.addKey('G');
+        }
+        
         console.log('⌨️ Keyboard controls ready (WASD)');
+    }
+
+    setupDevGrid(width, height) {
+        // Create grid graphics object
+        this.gridGraphics = this.add.graphics();
+        this.gridGraphics.setDepth(1000); // Ensure grid is on top
+        
+        // Make grid invisible by default
+        this.gridGraphics.setVisible(false);
+        
+        console.log('📐 Development grid ready (10x18, 32px cells)');
+    }
+
+    toggleGrid() {
+        // Only allow on desktop
+        if (this.isMobile) return;
+        
+        this.showGrid = !this.showGrid;
+        this.gridGraphics.setVisible(this.showGrid);
+        
+        if (this.showGrid) {
+            this.drawGrid();
+            console.log('📐 Development grid: ON');
+        } else {
+            this.hideGridLabels();
+            console.log('📐 Development grid: OFF');
+        }
+        
+        // Update desktop UI button state if it exists
+        const gridButton = document.getElementById('grid-toggle');
+        if (gridButton) {
+            gridButton.textContent = this.showGrid ? 'Hide Grid' : 'Show Grid';
+            gridButton.style.backgroundColor = this.showGrid ? '#4CAF50' : '#666';
+        }
+    }
+
+    drawGrid() {
+        const { width, height } = this.cameras.main;
+        
+        // Clear previous grid
+        this.gridGraphics.clear();
+        
+        // Grid settings
+        const cellWidth = 32;  // 320px / 10 columns = 32px
+        const cellHeight = 32; // Standard cell height
+        const lastRowHeight = height - (17 * cellHeight); // Remainder for row 18
+        
+        // Grid style
+        this.gridGraphics.lineStyle(1, 0x00ffff, 0.3); // Cyan, 30% opacity
+        
+        // Draw vertical lines (columns A-J)
+        for (let col = 0; col <= 10; col++) {
+            const x = col * cellWidth;
+            this.gridGraphics.beginPath();
+            this.gridGraphics.moveTo(x, 0);
+            this.gridGraphics.lineTo(x, height);
+            this.gridGraphics.strokePath();
+        }
+        
+        // Draw horizontal lines (rows 1-18)
+        for (let row = 0; row <= 18; row++) {
+            let y;
+            if (row <= 17) {
+                y = row * cellHeight;
+            } else {
+                y = height; // Bottom edge
+            }
+            
+            this.gridGraphics.beginPath();
+            this.gridGraphics.moveTo(0, y);
+            this.gridGraphics.lineTo(width, y);
+            this.gridGraphics.strokePath();
+        }
+        
+        // Add labels (columns A-J, rows 1-18)
+        this.gridGraphics.fillStyle(0x00ffff, 0.8);
+        
+        // Column labels (A-J)
+        const columnLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+        for (let col = 0; col < 10; col++) {
+            const x = col * cellWidth + cellWidth / 2;
+            const label = this.add.text(x, 8, columnLabels[col], {
+                fontSize: '12px',
+                color: '#00ffff',
+                align: 'center'
+            }).setOrigin(0.5).setDepth(1001);
+            
+            // Store label reference for cleanup
+            if (!this.gridLabels) this.gridLabels = [];
+            this.gridLabels.push(label);
+        }
+        
+        // Row labels (1-18)
+        for (let row = 0; row < 18; row++) {
+            let y;
+            if (row < 17) {
+                y = row * cellHeight + cellHeight / 2;
+            } else {
+                y = 17 * cellHeight + lastRowHeight / 2;
+            }
+            
+            const label = this.add.text(8, y, (row + 1).toString(), {
+                fontSize: '12px',
+                color: '#00ffff',
+                align: 'center'
+            }).setOrigin(0.5).setDepth(1001);
+            
+            this.gridLabels.push(label);
+        }
+    }
+
+    hideGridLabels() {
+        if (this.gridLabels) {
+            this.gridLabels.forEach(label => label.destroy());
+            this.gridLabels = [];
+        }
     }
 
     update() {
         if (!this.puffy || !this.puffy.sprite) return;
         if (!this.puffy.isReady) return; // Block input/physics until Puffy is fully ready
+        
+        // Handle grid toggle (G key) - desktop only
+        if (!this.isMobile && this.gridKey && Phaser.Input.Keyboard.JustDown(this.gridKey)) {
+            this.toggleGrid();
+        }
         
         const speed = 120;
         let isMovingHorizontally = false;
@@ -788,5 +921,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     window.hopHopPuffGame = new HopHopPuffGame();
 });
+
+// Global function to toggle dev grid from UI button
+window.toggleDevGrid = function() {
+    const gameScene = window.game?.scene?.getScene('GameScene');
+    if (gameScene && gameScene.toggleGrid) {
+        gameScene.toggleGrid();
+    }
+};
 
 console.log('✅ Hop Hop Puff main.js loaded successfully!'); 
