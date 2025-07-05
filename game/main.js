@@ -469,6 +469,7 @@ class LoadingScene extends Phaser.Scene {
         // Load birthday assets - Following Phaser.js Framework Priority (Rule 3)
         this.load.image('gift', 'assets/gift.png');
         this.load.image('puffy_winks', 'assets/puffy_winks.png');
+        this.load.image('block', 'assets/block.png');
 
         // Note: PuffySprite handles its own loading
         // Basic assets loaded here for birthday feature
@@ -517,41 +518,67 @@ class GameScene extends Phaser.Scene {
         this.ground = this.add.rectangle(width * 0.5, height - 30, width, 60, 0x228B22);
         this.physics.add.existing(this.ground, true); // Static body
 
-        // Create tiered platform structure (4 levels total including original block)
+        // Create tiered platform structure (4 levels total) using block sprites
         // Following Phaser.js Framework Priority (Rule 3) - using Phaser physics groups
         this.platforms = this.physics.add.staticGroup();
         
-        // Level 1: Original block (lowest tier) - adjusted for taller ground
-        this.block1 = this.add.rectangle(width * 0.25, height - 100, 60, 24, 0x8B4513);
-        this.block1.setStrokeStyle(2, 0x654321);
-        this.physics.add.existing(this.block1, true);
-        this.platforms.add(this.block1);
+        // Get block dimensions from loaded texture
+        const blockTexture = this.textures.get('block').getSourceImage();
+        const blockWidth = blockTexture.width;
+        const blockHeight = blockTexture.height;
+        const blockScale = 24 / blockHeight; // Scale to maintain 24px height
+        const scaledBlockWidth = blockWidth * blockScale;
+        
+        // Level 1: 3 blocks on left side (lowest tier) - adjusted for taller ground
+        const level1CenterX = width * 0.25;
+        const level1Y = height - 100;
+        for (let i = 0; i < 3; i++) {
+            const blockX = level1CenterX - scaledBlockWidth + (i * scaledBlockWidth);
+            const block = this.add.image(blockX, level1Y, 'block').setScale(blockScale);
+            this.physics.add.existing(block, true);
+            this.platforms.add(block);
+        }
 
-        // Level 2: Right side, higher - adjusted for taller ground
-        this.block2 = this.add.rectangle(width * 0.75, height - 140, 60, 24, 0x8B4513);
-        this.block2.setStrokeStyle(2, 0x654321);
-        this.physics.add.existing(this.block2, true);
-        this.platforms.add(this.block2);
+        // Level 2: 3 blocks on right side, higher - adjusted for taller ground
+        const level2CenterX = width * 0.75;
+        const level2Y = height - 140;
+        for (let i = 0; i < 3; i++) {
+            const blockX = level2CenterX - scaledBlockWidth + (i * scaledBlockWidth);
+            const block = this.add.image(blockX, level2Y, 'block').setScale(blockScale);
+            this.physics.add.existing(block, true);
+            this.platforms.add(block);
+        }
 
-        // Level 3: Left side, even higher - adjusted for taller ground
-        this.block3 = this.add.rectangle(width * 0.25, height - 180, 60, 24, 0x8B4513);
-        this.block3.setStrokeStyle(2, 0x654321);
-        this.physics.add.existing(this.block3, true);
-        this.platforms.add(this.block3);
+        // Level 3: 3 blocks on left side, even higher - adjusted for taller ground
+        const level3CenterX = width * 0.25;
+        const level3Y = height - 180;
+        for (let i = 0; i < 3; i++) {
+            const blockX = level3CenterX - scaledBlockWidth + (i * scaledBlockWidth);
+            const block = this.add.image(blockX, level3Y, 'block').setScale(blockScale);
+            this.physics.add.existing(block, true);
+            this.platforms.add(block);
+        }
 
-        // Level 4: Right side, highest tier - adjusted for taller ground
-        this.block4 = this.add.rectangle(width * 0.75, height - 220, 60, 24, 0x8B4513);
-        this.block4.setStrokeStyle(2, 0x654321);
-        this.physics.add.existing(this.block4, true);
-        this.platforms.add(this.block4);
+        // Level 4: 3 blocks on right side, highest tier - adjusted for taller ground
+        const level4CenterX = width * 0.75;
+        const level4Y = height - 220;
+        for (let i = 0; i < 3; i++) {
+            const blockX = level4CenterX - scaledBlockWidth + (i * scaledBlockWidth);
+            const block = this.add.image(blockX, level4Y, 'block').setScale(blockScale);
+            this.physics.add.existing(block, true);
+            this.platforms.add(block);
+        }
+        
+        // Store the top platform position for gift placement
+        this.topPlatformY = level4Y;
 
         // Add birthday gift on top platform (Level 4)
         // Make the gift much smaller and align its bottom with the top of the platform
         const giftScale = 0.1;
         const giftImage = this.textures.get('gift').getSourceImage();
         const giftDisplayHeight = giftImage.height * giftScale;
-        const block4Top = this.block4.y - 12; // block4 is 24px tall, so top is y-12
-        const giftY = block4Top - giftDisplayHeight / 2 + giftDisplayHeight * 0.10; // sink by 10%
+        const level4Top = this.topPlatformY - 12; // platforms are 24px tall, so top is y-12
+        const giftY = level4Top - giftDisplayHeight / 2 + giftDisplayHeight * 0.10; // sink by 10%
         this.gift = this.add.image(width * 0.75, giftY, 'gift');
         this.gift.setScale(giftScale);
         this.physics.add.existing(this.gift, true); // STATIC body
