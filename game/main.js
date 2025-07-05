@@ -527,9 +527,8 @@ class GameScene extends Phaser.Scene {
         this.background.setAlpha(0.4); // 40% opacity for subtle background effect
         this.background.setDepth(-100); // Ensure it's behind everything
         
-        // Create ground (simple green rectangle) - 50% taller to accommodate mobile controls
-        this.ground = this.add.rectangle(width * 0.5, height - 30, width, 60, 0x228B22);
-        this.physics.add.existing(this.ground, true); // Static body
+        // Create styled ground (grey with embossed effect) - 50% taller to accommodate mobile controls
+        this.createStyledGround(width, height);
 
         // Create tiered platform structure (4 levels total) using block sprites
         // Following Phaser.js Framework Priority (Rule 3) - using Phaser physics groups
@@ -617,7 +616,76 @@ class GameScene extends Phaser.Scene {
         this.puffy = new PuffySprite(this);
         this.setupPuffyWhenReady(width, height);
 
-        console.log('✅ Game elements created: Puffy, ground, tiered platforms, and birthday gift');
+        console.log('✅ Game elements created: Puffy, styled ground, tiered platforms, and birthday gift');
+    }
+
+    createStyledGround(width, height) {
+        // Create ground graphics for custom styling
+        this.groundGraphics = this.add.graphics();
+        this.groundGraphics.setDepth(-50); // Behind platforms but above background
+        
+        const groundY = height - 60;
+        const groundHeight = 60;
+        
+        // Main ground color - warm grey to match kitchen tones
+        const groundColor = 0x8B7D6B; // Warm grey-brown
+        const shadowColor = 0x5D5248; // Darker for shadows
+        const highlightColor = 0xB5A898; // Lighter for highlights
+        
+        // Fill main ground area
+        this.groundGraphics.fillStyle(groundColor);
+        this.groundGraphics.fillRect(0, groundY, width, groundHeight);
+        
+        // Add embossed top edge (highlight)
+        this.groundGraphics.lineStyle(2, highlightColor, 0.8);
+        this.groundGraphics.beginPath();
+        this.groundGraphics.moveTo(0, groundY);
+        this.groundGraphics.lineTo(width, groundY);
+        this.groundGraphics.strokePath();
+        
+        // Add inner highlight line
+        this.groundGraphics.lineStyle(1, highlightColor, 0.4);
+        this.groundGraphics.beginPath();
+        this.groundGraphics.moveTo(0, groundY + 2);
+        this.groundGraphics.lineTo(width, groundY + 2);
+        this.groundGraphics.strokePath();
+        
+        // Add shadow on sides and bottom
+        this.groundGraphics.lineStyle(2, shadowColor, 0.6);
+        
+        // Left shadow
+        this.groundGraphics.beginPath();
+        this.groundGraphics.moveTo(0, groundY);
+        this.groundGraphics.lineTo(0, height);
+        this.groundGraphics.strokePath();
+        
+        // Right shadow
+        this.groundGraphics.beginPath();
+        this.groundGraphics.moveTo(width, groundY);
+        this.groundGraphics.lineTo(width, height);
+        this.groundGraphics.strokePath();
+        
+        // Bottom shadow (if visible)
+        this.groundGraphics.beginPath();
+        this.groundGraphics.moveTo(0, height);
+        this.groundGraphics.lineTo(width, height);
+        this.groundGraphics.strokePath();
+        
+        // Add subtle texture lines
+        this.groundGraphics.lineStyle(1, shadowColor, 0.2);
+        for (let i = 1; i < 4; i++) {
+            const y = groundY + (groundHeight / 4) * i;
+            this.groundGraphics.beginPath();
+            this.groundGraphics.moveTo(0, y);
+            this.groundGraphics.lineTo(width, y);
+            this.groundGraphics.strokePath();
+        }
+        
+        // Create invisible physics ground (same dimensions as visual)
+        this.ground = this.add.rectangle(width * 0.5, height - 30, width, 60, 0x000000, 0);
+        this.physics.add.existing(this.ground, true); // Static body
+        
+        console.log('✅ Styled ground created with embossed effects');
     }
 
     setupPuffyWhenReady(width, height) {
@@ -926,8 +994,87 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingScreen.style.display = 'none';
     }
     
+    // Setup mobile browser UI auto-hide
+    setupMobileBrowserUIHide();
+    
     window.hopHopPuffGame = new HopHopPuffGame();
 });
+
+// Mobile browser UI auto-hide functionality
+function setupMobileBrowserUIHide() {
+    // Only run on mobile devices
+    if (!('ontouchstart' in window)) return;
+    
+    let hideTimer;
+    
+    // Function to request fullscreen and hide browser UI
+    function hideBrowserUI() {
+        // Request fullscreen on document element
+        const elem = document.documentElement;
+        
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen().catch(() => {
+                console.log('📱 Fullscreen not supported or denied');
+            });
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen().catch(() => {
+                console.log('📱 WebKit fullscreen not supported or denied');
+            });
+        } else if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen().catch(() => {
+                console.log('📱 Mozilla fullscreen not supported or denied');
+            });
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen().catch(() => {
+                console.log('📱 IE fullscreen not supported or denied');
+            });
+        }
+        
+        // Force scroll to top to hide address bar on browsers that don't support fullscreen
+        window.scrollTo(0, 1);
+        setTimeout(() => window.scrollTo(0, 0), 100);
+    }
+    
+    // Function to show browser UI (exit fullscreen)
+    function showBrowserUI() {
+        if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen().catch(() => {});
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen().catch(() => {});
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen().catch(() => {});
+        }
+    }
+    
+    // Auto-hide after 3 seconds of no interaction
+    function resetHideTimer() {
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(() => {
+            hideBrowserUI();
+        }, 3000);
+    }
+    
+    // Listen for touch events to reset timer
+    document.addEventListener('touchstart', resetHideTimer, { passive: true });
+    document.addEventListener('touchmove', resetHideTimer, { passive: true });
+    document.addEventListener('touchend', resetHideTimer, { passive: true });
+    
+    // Listen for orientation changes
+    window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+            hideBrowserUI();
+        }, 500);
+    });
+    
+    // Initial hide after page load
+    setTimeout(() => {
+        hideBrowserUI();
+    }, 1000);
+    
+    console.log('📱 Mobile browser UI auto-hide enabled');
+}
 
 // Global function to toggle dev grid from UI button
 window.toggleDevGrid = function() {

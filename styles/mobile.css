@@ -36,6 +36,13 @@ html, body {
     font-size: 16px;
     color: var(--text-color);
     touch-action: manipulation;
+    
+    /* Mobile browser UI auto-hide */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 /* === LOADING SCREEN === */

@@ -1,14 +1,5 @@
-127.0.0.1 - - [05/Jul/2025 14:32:21] "GET /index.html HTTP/1.1" 200 -
-127.0.0.1 - - [05/Jul/2025 14:32:21] "GET /styles/mobile.css HTTP/1.1" 200 -
-127.0.0.1 - - [05/Jul/2025 14:32:21] "GET /game/main.js HTTP/1.1" 200 -
-127.0.0.1 - - [05/Jul/2025 14:32:21] "GET /styles/desktop.css HTTP/1.1" 200 -
-127.0.0.1 - - [05/Jul/2025 14:32:21] "GET /game/sprites/PuffySprite.js HTTP/1.1" 200 -
-127.0.0.1 - - [05/Jul/2025 14:32:21] "GET /assets/puffy_winks.png HTTP/1.1" 200 -
-127.0.0.1 - - [05/Jul/2025 14:32:21] "GET /assets/gift.png HTTP/1.1" 200 -
-127.0.0.1 - - [05/Jul/2025 14:32:21] "GET /assets/block.png HTTP/1.1" 200 -
-127.0.0.1 - - [05/Jul/2025 14:32:22] "GET /assets/puffy_4_by_4.png?t=1751743942213 HTTP/1.1" 200 -
-127.0.0.1 - - [05/Jul/2025 14:32:22] "GET /assets/puffy_4_by_4.png HTTP/1.1" 200 -
-127.0.0.1 - - [05/Jul/2025 14:32:22] code 404, message File not found
-127.0.0.1 - - [05/Jul/2025 14:32:22] "GET /manifest.json HTTP/1.1" 404 -
-127.0.0.1 - - [05/Jul/2025 14:32:22] code 404, message File not found
-127.0.0.1 - - [05/Jul/2025 14:32:22] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [05/Jul/2025 14:51:37] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [05/Jul/2025 14:51:37] "GET /game/sprites/PuffySprite.js HTTP/1.1" 200 -
+127.0.0.1 - - [05/Jul/2025 14:51:37] "GET /styles/desktop.css HTTP/1.1" 200 -
+127.0.0.1 - - [05/Jul/2025 14:51:37] "GET /styles/mobile.css HTTP/1.1" 200 -
+127.0.0.1 - - [05/Jul/2025 14:51:37] "GET /game/main.js HTTP/1.1" 200 -
