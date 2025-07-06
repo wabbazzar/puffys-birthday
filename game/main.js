@@ -509,15 +509,84 @@ class GameScene extends Phaser.Scene {
         this.showGrid = false; // Grid toggle state
         this.gridGraphics = null; // Grid graphics object
         this.isMobile = 'ontouchstart' in window; // Detect mobile
+        
+        // Grid development system
+        this.gridSystem = null;
+        this.gridPlacement = null;
+        this.gridValidator = null;
     }
     
     create() {
         const { width, height } = this.cameras.main;
         console.log(`🎮 Game Scene: Creating simplified game (${width}x${height})`);
 
+        this.setupGridSystem(width, height);
         this.setupGameElements(width, height);
         this.setupKeyboardControls();
         this.setupDevGrid(width, height);
+    }
+
+    setupGridSystem(width, height) {
+        // Initialize grid development system
+        this.gridSystem = new GridSystem(width, height);
+        this.gridPlacement = new GridPlacement(this.gridSystem, this);
+        this.gridValidator = new GridValidator(this.gridSystem, this.gridPlacement);
+        
+        // Make grid system globally accessible for console commands
+        window.gameGrid = this.gridSystem;
+        window.gamePlacement = this.gridPlacement;
+        window.gameValidator = this.gridValidator;
+        
+        console.log('🎯 Grid development system initialized');
+        console.log('💡 Try these console commands:');
+        console.log('   gamePlacement.placePlatform("B12", "D12", {useBlocks: true})');
+        console.log('   gameValidator.validateAll()');
+        console.log('   gamePlacement.listObjects()');
+        
+        // Add global helper functions for easy console access
+        this.setupGridHelpers();
+    }
+    
+    setupGridHelpers() {
+        // Quick platform placement function
+        window.quickPlatform = (startCoord, endCoord, id) => {
+            const platformId = id || `platform_${startCoord}_${endCoord}`;
+            return this.gridPlacement.placePlatform(startCoord, endCoord, {
+                useBlocks: true,
+                id: platformId
+            });
+        };
+        
+        // Quick object placement function  
+        window.quickObject = (coord, type, scale = 0.2) => {
+            const objectId = `${type}_${coord}`;
+            return this.gridPlacement.placeObject(coord, type, {
+                scale: scale,
+                id: objectId
+            });
+        };
+        
+        // Quick validation function
+        window.checkPlacement = (id, startCoord, endCoord = null) => {
+            return this.gridValidator.validatePlacement(id, startCoord, endCoord);
+        };
+        
+        // Grid coordinate converter
+        window.gridToPixel = (coord) => {
+            return this.gridSystem.gridToPixel(coord);
+        };
+        
+        // Pixel to grid converter
+        window.pixelToGrid = (x, y) => {
+            return this.gridSystem.pixelToGrid(x, y);
+        };
+        
+        console.log('🛠️ Grid helper functions added:');
+        console.log('   quickPlatform("B12", "D12") - Quick block platform');
+        console.log('   quickObject("E10", "gift") - Quick object placement');
+        console.log('   checkPlacement("platform_B12_D12", "B12", "D12") - Validate');
+        console.log('   gridToPixel("B12") - Convert to pixels');
+        console.log('   pixelToGrid(64, 352) - Convert to grid');
     }
 
     setupGameElements(width, height) {
@@ -1100,5 +1169,60 @@ window.toggleDevGrid = function() {
         gameScene.toggleGrid();
     }
 };
+
+// Global function to execute grid commands from UI
+window.executeGridCommand = function() {
+    const commandInput = document.getElementById('grid-command');
+    const resultDiv = document.getElementById('command-result');
+    
+    if (!commandInput || !resultDiv) return;
+    
+    const command = commandInput.value.trim();
+    if (!command) {
+        resultDiv.textContent = 'Enter a command first';
+        resultDiv.style.color = '#ff6666';
+        return;
+    }
+    
+    try {
+        // Check if grid system is available
+        if (!window.gamePlacement || !window.gameValidator) {
+            throw new Error('Grid system not initialized yet');
+        }
+        
+        // Execute the command
+        console.log(`🎯 Executing grid command: ${command}`);
+        const result = eval(command);
+        
+        // Display result
+        if (result) {
+            resultDiv.textContent = `✅ Success: ${typeof result === 'object' ? JSON.stringify(result, null, 2) : result}`;
+            resultDiv.style.color = '#66ff66';
+        } else {
+            resultDiv.textContent = '✅ Command executed successfully';
+            resultDiv.style.color = '#66ff66';
+        }
+        
+        // Clear the input for next command
+        commandInput.value = '';
+        
+    } catch (error) {
+        console.error('Grid command error:', error);
+        resultDiv.textContent = `❌ Error: ${error.message}`;
+        resultDiv.style.color = '#ff6666';
+    }
+};
+
+// Allow Enter key to execute commands
+document.addEventListener('DOMContentLoaded', () => {
+    const commandInput = document.getElementById('grid-command');
+    if (commandInput) {
+        commandInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                window.executeGridCommand();
+            }
+        });
+    }
+});
 
 console.log('✅ Hop Hop Puff main.js loaded successfully!'); 

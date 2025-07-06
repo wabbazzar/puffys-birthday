@@ -108,12 +108,20 @@
                 <h4>Development</h4>
                 <p><kbd>G</kbd> - Toggle grid</p>
                 <button id="grid-toggle" class="grid-button" onclick="window.toggleDevGrid()">Show Grid</button>
+                <div style="margin-top: 10px;">
+                    <h5>Grid Commands</h5>
+                    <input type="text" id="grid-command" placeholder='quickPlatform("B12", "D12")' 
+                           style="width: 200px; padding: 5px; font-family: monospace;">
+                    <button onclick="window.executeGridCommand()">Execute</button>
+                    <div id="command-result" style="margin-top: 5px; font-size: 12px; color: #ccc;"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Game scripts -->
     <script src="game/sprites/PuffySprite.js"></script>
+    <script src="game/GridSystem.js"></script>
     <script src="game/main.js"></script>
 </body>
 </html> 

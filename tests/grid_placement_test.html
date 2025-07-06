@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Placement Test System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #2a2a2a;
+            color: white;
+        }
+        .test-controls {
+            background: #333;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .test-results {
+            background: #333;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .pass { color: #00ff00; }
+        .fail { color: #ff0000; }
+        .info { color: #00ffff; }
+        .warning { color: #ffaa00; }
+        button {
+            background: #666;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover { background: #777; }
+        button.active { background: #4CAF50; }
+        input {
+            background: #444;
+            color: white;
+            border: 1px solid #666;
+            padding: 8px;
+            margin: 5px;
+            border-radius: 3px;
+        }
+        .command-example {
+            background: #1a4a1a;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .coordinate-input {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .coordinate-input label {
+            width: 100px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Grid Placement Test System</h1>
+    <p>Interactive testing system for the Hop Hop Puff grid development tools.</p>
+    
+    <div class="test-controls">
+        <h3>Quick Test Commands</h3>
+        
+        <div class="coordinate-input">
+            <label>Start Coord:</label>
+            <input type="text" id="start-coord" value="B12" placeholder="e.g., B12">
+            <label>End Coord:</label>
+            <input type="text" id="end-coord" value="D12" placeholder="e.g., D12">
+            <button onclick="testPlatformPlacement()">Place Block Platform</button>
+        </div>
+        
+        <div class="coordinate-input">
+            <label>Object Coord:</label>
+            <input type="text" id="object-coord" value="E10" placeholder="e.g., E10">
+            <select id="object-type">
+                <option value="gift">Gift</option>
+                <option value="rectangle">Rectangle</option>
+            </select>
+            <button onclick="testObjectPlacement()">Place Object</button>
+        </div>
+        
+        <button onclick="validateAllPlacements()">Validate All</button>
+        <button onclick="listAllObjects()">List Objects</button>
+        <button onclick="clearAllObjects()">Clear All</button>
+        <button onclick="toggleGameGrid()">Toggle Grid</button>
+    </div>
+    
+    <div class="test-controls">
+        <h3>Example Commands</h3>
+        
+        <div class="command-example">
+            <strong>Platform Spanning B12-D12:</strong><br>
+            gamePlacement.placePlatform("B12", "D12", {useBlocks: true, id: "test_platform_1"})
+        </div>
+        
+        <div class="command-example">
+            <strong>Gift at E10:</strong><br>
+            gamePlacement.placeObject("E10", "gift", {scale: 0.2, id: "test_gift_1"})
+        </div>
+        
+        <div class="command-example">
+            <strong>Validate Specific Object:</strong><br>
+            gameValidator.validatePlacement("test_platform_1", "B12", "D12")
+        </div>
+        
+        <button onclick="runExampleCommands()">Run All Examples</button>
+    </div>
+    
+    <div id="test-results" class="test-results">
+        <h3>Test Results</h3>
+        <div id="results-content">
+            <p class="info">Click buttons above to run tests. Make sure the main game is loaded first!</p>
+        </div>
+    </div>
+
+    <script>
+        let testResults = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            testResults.push(`<span class="${type}">[${timestamp}] ${message}</span>`);
+            updateResultsDisplay();
+        }
+        
+        function updateResultsDisplay() {
+            const content = document.getElementById('results-content');
+            content.innerHTML = testResults.slice(-50).join('<br>'); // Show last 50 messages
+            content.scrollTop = content.scrollHeight;
+        }
+        
+        function checkGameLoaded() {
+            if (!window.gamePlacement || !window.gameValidator || !window.gameGrid) {
+                log('❌ Grid system not found! Make sure the main game is loaded first.', 'fail');
+                return false;
+            }
+            return true;
+        }
+        
+        function testPlatformPlacement() {
+            if (!checkGameLoaded()) return;
+            
+            const startCoord = document.getElementById('start-coord').value;
+            const endCoord = document.getElementById('end-coord').value;
+            
+            if (!startCoord || !endCoord) {
+                log('❌ Please enter both start and end coordinates', 'fail');
+                return;
+            }
+            
+            try {
+                log(`🏗️ Placing platform from ${startCoord} to ${endCoord}...`, 'info');
+                
+                const id = `test_platform_${startCoord}_${endCoord}`;
+                const platform = window.gamePlacement.placePlatform(startCoord, endCoord, {
+                    useBlocks: true,
+                    id: id
+                });
+                
+                log(`✅ Platform placed successfully: ${id}`, 'pass');
+                
+                // Validate immediately
+                const validation = window.gameValidator.validatePlacement(id, startCoord, endCoord);
+                if (validation.valid) {
+                    log(`✅ Platform validation passed`, 'pass');
+                } else {
+                    log(`❌ Platform validation failed: ${validation.error || 'Position mismatch'}`, 'fail');
+                }
+                
+            } catch (error) {
+                log(`❌ Failed to place platform: ${error.message}`, 'fail');
+            }
+        }
+        
+        function testObjectPlacement() {
+            if (!checkGameLoaded()) return;
+            
+            const coord = document.getElementById('object-coord').value;
+            const objectType = document.getElementById('object-type').value;
+            
+            if (!coord) {
+                log('❌ Please enter coordinate', 'fail');
+                return;
+            }
+            
+            try {
+                log(`📦 Placing ${objectType} at ${coord}...`, 'info');
+                
+                const id = `test_${objectType}_${coord}`;
+                const options = { id: id };
+                
+                if (objectType === 'gift') {
+                    options.scale = 0.2;
+                } else if (objectType === 'rectangle') {
+                    options.width = 32;
+                    options.height = 32;
+                    options.color = 0xff00ff;
+                }
+                
+                const object = window.gamePlacement.placeObject(coord, objectType, options);
+                
+                log(`✅ ${objectType} placed successfully: ${id}`, 'pass');
+                
+                // Validate immediately
+                const validation = window.gameValidator.validatePlacement(id, coord);
+                if (validation.valid) {
+                    log(`✅ ${objectType} validation passed`, 'pass');
+                } else {
+                    log(`❌ ${objectType} validation failed: ${validation.error || 'Position mismatch'}`, 'fail');
+                }
+                
+            } catch (error) {
+                log(`❌ Failed to place ${objectType}: ${error.message}`, 'fail');
+            }
+        }
+        
+        function validateAllPlacements() {
+            if (!checkGameLoaded()) return;
+            
+            log('🔍 Running validation on all placed objects...', 'info');
+            
+            try {
+                const results = window.gameValidator.validateAll();
+                
+                let passCount = 0;
+                let failCount = 0;
+                
+                results.forEach(result => {
+                    if (result.valid) {
+                        passCount++;
+                        log(`✅ ${result.id}: VALID`, 'pass');
+                    } else {
+                        failCount++;
+                        log(`❌ ${result.id}: INVALID - ${result.error || 'Position mismatch'}`, 'fail');
+                    }
+                });
+                
+                log(`📊 Validation complete: ${passCount} passed, ${failCount} failed`, 
+                    failCount === 0 ? 'pass' : 'warning');
+                
+            } catch (error) {
+                log(`❌ Validation failed: ${error.message}`, 'fail');
+            }
+        }
+        
+        function listAllObjects() {
+            if (!checkGameLoaded()) return;
+            
+            log('📋 Listing all placed objects...', 'info');
+            
+            try {
+                const objects = window.gamePlacement.listObjects();
+                
+                if (objects.length === 0) {
+                    log('📋 No objects placed yet', 'info');
+                } else {
+                    objects.forEach(id => {
+                        const info = window.gamePlacement.getObjectInfo(id);
+                        const location = info.coord || `${info.startCoord}-${info.endCoord}`;
+                        log(`📦 ${id}: ${info.type} at ${location}`, 'info');
+                    });
+                }
+                
+            } catch (error) {
+                log(`❌ Failed to list objects: ${error.message}`, 'fail');
+            }
+        }
+        
+        function clearAllObjects() {
+            if (!checkGameLoaded()) return;
+            
+            log('🗑️ Clearing all test objects...', 'warning');
+            
+            try {
+                const objects = window.gamePlacement.listObjects();
+                let removed = 0;
+                
+                objects.forEach(id => {
+                    if (id.startsWith('test_')) {
+                        if (window.gamePlacement.removeObject(id)) {
+                            removed++;
+                        }
+                    }
+                });
+                
+                log(`🗑️ Removed ${removed} test objects`, 'pass');
+                
+            } catch (error) {
+                log(`❌ Failed to clear objects: ${error.message}`, 'fail');
+            }
+        }
+        
+        function toggleGameGrid() {
+            if (!checkGameLoaded()) return;
+            
+            try {
+                // Access the game scene through Phaser
+                if (window.game && window.game.scene && window.game.scene.scenes[0]) {
+                    const gameScene = window.game.scene.scenes[0];
+                    if (gameScene.toggleGrid) {
+                        gameScene.toggleGrid();
+                        log('📐 Grid toggled', 'info');
+                    } else {
+                        log('❌ Grid toggle method not found', 'fail');
+                    }
+                } else {
+                    log('❌ Game scene not accessible', 'fail');
+                }
+            } catch (error) {
+                log(`❌ Failed to toggle grid: ${error.message}`, 'fail');
+            }
+        }
+        
+        function runExampleCommands() {
+            if (!checkGameLoaded()) return;
+            
+            log('🚀 Running example commands...', 'info');
+            
+            // Clear any existing test objects first
+            clearAllObjects();
+            
+            setTimeout(() => {
+                // Example 1: Platform B12-D12
+                document.getElementById('start-coord').value = 'B12';
+                document.getElementById('end-coord').value = 'D12';
+                testPlatformPlacement();
+            }, 500);
+            
+            setTimeout(() => {
+                // Example 2: Gift at E10
+                document.getElementById('object-coord').value = 'E10';
+                document.getElementById('object-type').value = 'gift';
+                testObjectPlacement();
+            }, 1000);
+            
+            setTimeout(() => {
+                // Example 3: Rectangle at G8
+                document.getElementById('object-coord').value = 'G8';
+                document.getElementById('object-type').value = 'rectangle';
+                testObjectPlacement();
+            }, 1500);
+            
+            setTimeout(() => {
+                // Final validation
+                validateAllPlacements();
+                log('🎉 Example commands completed!', 'pass');
+            }, 2000);
+        }
+        
+        // Initialize
+        log('🎯 Grid Placement Test System ready!', 'pass');
+        log('💡 Load the main game first, then use the buttons above to test grid placement.', 'info');
+    </script>
+</body>
+</html>
