@@ -59,11 +59,15 @@
         const leftPlatformCenterX = CENTERLINE - SYMMETRIC_GAP - (PLATFORM_WIDTH / 2);  // ≈ 94.25
         const rightPlatformCenterX = CENTERLINE + SYMMETRIC_GAP + (PLATFORM_WIDTH / 2); // ≈ 225.75
         
+        // Platforms 3 & 4 touch the edges
+        const leftEdgePlatformCenterX = PLATFORM_WIDTH / 2; // Platform center when left edge touches screen edge
+        const rightEdgePlatformCenterX = GAME_WIDTH - (PLATFORM_WIDTH / 2); // Platform center when right edge touches screen edge
+        
         const platforms = [
             { name: "Platform 1 (bottom left)", centerX: leftPlatformCenterX, centerY: 512, side: "left" },
             { name: "Platform 2 (second right)", centerX: rightPlatformCenterX, centerY: 480, side: "right" },
-            { name: "Platform 3 (third left)", centerX: leftPlatformCenterX, centerY: 432, side: "left" },
-            { name: "Platform 4 (top right)", centerX: rightPlatformCenterX, centerY: 400, side: "right" }
+            { name: "Platform 3 (third left - edge)", centerX: leftEdgePlatformCenterX, centerY: 432, side: "left", touchesEdge: true },
+            { name: "Platform 4 (top right - edge)", centerX: rightEdgePlatformCenterX, centerY: 400, side: "right", touchesEdge: true }
         ];
         
         function runSymmetryTest() {
@@ -120,6 +124,13 @@
             // Test for symmetry
             testResults.push('<br><h3>Symmetry Test Results:</h3>');
             
+            // Show edge-touching platforms
+            testResults.push('<h4>Edge-Touching Platforms:</h4>');
+            measurements.filter(m => platforms.find(p => p.name === m.platform && p.touchesEdge)).forEach(m => {
+                const edgeDistance = m.side === "left" ? m.leftEdge : (GAME_WIDTH - m.rightEdge);
+                testResults.push(`<p class="info">${m.platform}: ${edgeDistance.toFixed(2)}px from ${m.side} edge</p>`);
+            });
+            
             // Group by pairs (platforms should be symmetric)
             const leftPlatforms = measurements.filter(m => m.side === "left");
             const rightPlatforms = measurements.filter(m => m.side === "right");
@@ -127,41 +138,52 @@
             testResults.push(`<p class="info">Left platforms: ${leftPlatforms.length}</p>`);
             testResults.push(`<p class="info">Right platforms: ${rightPlatforms.length}</p>`);
             
-            // Check if all distances are equal
-            const distances = measurements.map(m => m.distanceToCenter);
-            const uniqueDistances = [...new Set(distances)];
+            // Check symmetry for non-edge-touching platforms only
+            const nonEdgePlatforms = measurements.filter(m => !platforms.find(p => p.name === m.platform && p.touchesEdge));
+            const nonEdgeDistances = nonEdgePlatforms.map(m => m.distanceToCenter);
+            const uniqueNonEdgeDistances = [...new Set(nonEdgeDistances)];
             
             testResults.push('<br><h4>Distance Analysis:</h4>');
-            distances.forEach((distance, index) => {
-                testResults.push(`<p>${measurements[index].platform}: ${distance}px from center</p>`);
+            testResults.push('<h5>Symmetric Platforms (1 & 2):</h5>');
+            nonEdgePlatforms.forEach(m => {
+                testResults.push(`<p>${m.platform}: ${m.distanceToCenter}px from center</p>`);
             });
             
-            // Test result
-            const isSymmetric = uniqueDistances.length === 1 && uniqueDistances[0] > 0;
+            testResults.push('<h5>Edge-Touching Platforms (3 & 4):</h5>');
+            measurements.filter(m => platforms.find(p => p.name === m.platform && p.touchesEdge)).forEach(m => {
+                testResults.push(`<p>${m.platform}: ${m.distanceToCenter}px from center</p>`);
+            });
+            
+            // Test result for non-edge platforms
+            const isSymmetric = uniqueNonEdgeDistances.length === 1 && uniqueNonEdgeDistances[0] > 0;
             
             testResults.push('<br><div class="expected">');
-            testResults.push('<h4>Expected for True Symmetry:</h4>');
-            testResults.push('<p>All platforms should have the SAME distance from their inner edge to the centerline.</p>');
-            testResults.push('<p>This ensures equal gaps between platforms and the center of the game.</p>');
+            testResults.push('<h4>Expected Layout:</h4>');
+            testResults.push('<p>Platforms 1 & 2: Symmetric with 32px gaps from centerline</p>');
+            testResults.push('<p>Platforms 3 & 4: Touching the edges of the screen</p>');
             testResults.push('</div>');
             
-            if (isSymmetric) {
-                testResults.push(`<h3 class="pass">✅ SYMMETRY TEST PASSED</h3>`);
-                testResults.push(`<p class="pass">All platforms are ${uniqueDistances[0]}px from centerline</p>`);
+            // Check edge-touching platforms
+            let edgeTouchingCorrect = true;
+            measurements.filter(m => platforms.find(p => p.name === m.platform && p.touchesEdge)).forEach(m => {
+                const edgeDistance = m.side === "left" ? m.leftEdge : (GAME_WIDTH - m.rightEdge);
+                if (Math.abs(edgeDistance) > 0.1) { // Allow small floating point errors
+                    edgeTouchingCorrect = false;
+                }
+            });
+            
+            if (isSymmetric && edgeTouchingCorrect) {
+                testResults.push(`<h3 class="pass">✅ ALL TESTS PASSED</h3>`);
+                testResults.push(`<p class="pass">Platforms 1 & 2 are symmetric (${uniqueNonEdgeDistances[0]}px from centerline)</p>`);
+                testResults.push(`<p class="pass">Platforms 3 & 4 are touching the screen edges</p>`);
             } else {
-                testResults.push(`<h3 class="fail">❌ SYMMETRY TEST FAILED</h3>`);
-                testResults.push(`<p class="fail">Platforms have different distances: ${distances.join(', ')}px</p>`);
-                testResults.push('<br><h4 class="fail">Issues Found:</h4>');
-                
-                const targetDistance = Math.max(...distances);
-                measurements.forEach(m => {
-                    if (m.distanceToCenter !== targetDistance) {
-                        const adjustment = targetDistance - m.distanceToCenter;
-                        const direction = m.side === "left" ? "right" : "left";
-                        testResults.push(`<p class="fail">${m.platform}: Move ${Math.abs(adjustment)}px to the ${direction}</p>`);
-                    }
-                });
-                
+                testResults.push(`<h3 class="fail">❌ TEST FAILED</h3>`);
+                if (!isSymmetric) {
+                    testResults.push(`<p class="fail">Platforms 1 & 2 have different distances: ${nonEdgeDistances.join(', ')}px</p>`);
+                }
+                if (!edgeTouchingCorrect) {
+                    testResults.push(`<p class="fail">Platforms 3 & 4 are not touching the edges properly</p>`);
+                }
                 allTestsPass = false;
             }
             

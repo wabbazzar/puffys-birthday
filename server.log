@@ -1,0 +1,18 @@
+127.0.0.1 - - [06/Jul/2025 17:54:07] "GET /tests/platform_symmetry_test.html HTTP/1.1" 200 -
+127.0.0.1 - - [06/Jul/2025 17:54:10] code 404, message File not found
+127.0.0.1 - - [06/Jul/2025 17:54:10] "GET /puffacles-sw.js HTTP/1.1" 404 -
+127.0.0.1 - - [06/Jul/2025 17:54:39] code 404, message File not found
+127.0.0.1 - - [06/Jul/2025 17:54:39] "GET /puffacles-sw.js HTTP/1.1" 404 -
+127.0.0.1 - - [06/Jul/2025 17:55:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [06/Jul/2025 17:55:14] "GET /game/main.js HTTP/1.1" 200 -
+127.0.0.1 - - [06/Jul/2025 17:55:14] "GET /game/sprites/PuffySprite.js HTTP/1.1" 304 -
+127.0.0.1 - - [06/Jul/2025 17:55:15] "GET /assets/block.png HTTP/1.1" 304 -
+127.0.0.1 - - [06/Jul/2025 17:55:15] "GET /assets/background.png HTTP/1.1" 304 -
+127.0.0.1 - - [06/Jul/2025 17:55:15] "GET /assets/gift.png HTTP/1.1" 304 -
+127.0.0.1 - - [06/Jul/2025 17:55:15] "GET /assets/puffy_winks.png HTTP/1.1" 304 -
+127.0.0.1 - - [06/Jul/2025 17:55:15] "GET /assets/puffy_4_by_4.png?t=1751842515642 HTTP/1.1" 200 -
+127.0.0.1 - - [06/Jul/2025 17:55:15] "GET /assets/puffy_4_by_4.png HTTP/1.1" 304 -
+127.0.0.1 - - [06/Jul/2025 17:55:15] "GET /manifest.json HTTP/1.1" 304 -
+127.0.0.1 - - [06/Jul/2025 17:55:15] "GET /assets/puffy.png HTTP/1.1" 304 -
+127.0.0.1 - - [06/Jul/2025 17:55:17] code 404, message File not found
+127.0.0.1 - - [06/Jul/2025 17:55:17] "GET /puffacles-sw.js HTTP/1.1" 404 -

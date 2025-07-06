@@ -605,14 +605,16 @@ class GameScene extends Phaser.Scene {
         // Platform 2: Second from bottom right - Row 15 = 480px  
         createPlatform(rightPlatformCenterX, 480);
 
-        // Platform 3: Third level left - Row 13.5 = 432px (up half cell)
-        createPlatform(leftPlatformCenterX, 432);
+        // Platform 3: Third level left - Row 13.5 = 432px (up half cell) - touching left edge
+        const leftEdgePlatformCenterX = totalPlatformWidth / 2; // Platform center when left edge touches screen edge
+        createPlatform(leftEdgePlatformCenterX, 432);
 
-        // Platform 4: Top right - Row 12.5 = 400px (up half cell)
-        createPlatform(rightPlatformCenterX, 400);
+        // Platform 4: Top right - Row 12.5 = 400px (up half cell) - touching right edge
+        const rightEdgePlatformCenterX = width - (totalPlatformWidth / 2); // Platform center when right edge touches screen edge
+        createPlatform(rightEdgePlatformCenterX, 400);
         
         // Store the top platform position for gift placement (top right platform)
-        this.topPlatformX = rightPlatformCenterX; // Calculated symmetric position
+        this.topPlatformX = rightEdgePlatformCenterX; // Platform touching right edge
         this.topPlatformY = 400;  // Row 12.5
 
         // Add birthday gift on top platform (top right platform)
