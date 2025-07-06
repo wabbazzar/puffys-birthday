@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Symmetry Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #2a2a2a;
+            color: white;
+        }
+        .test-results {
+            background: #333;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+        .pass { color: #00ff00; }
+        .fail { color: #ff0000; }
+        .info { color: #00ffff; }
+        .measurement {
+            margin: 10px 0;
+            padding: 10px;
+            background: #444;
+            border-radius: 3px;
+        }
+        .expected {
+            background: #1a4a1a;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Platform Symmetry Measurement Test</h1>
+    <p>This test measures the distance from each platform edge to the centerline to verify true symmetry.</p>
+    
+    <div id="test-results" class="test-results">
+        <h3>Running Symmetry Tests...</h3>
+        <div id="results-content"></div>
+    </div>
+
+    <script>
+        // Game dimensions and current platform positions
+        const GAME_WIDTH = 320;
+        const GAME_HEIGHT = 568;
+        const CENTERLINE = GAME_WIDTH / 2; // 160px
+        
+        // Updated platform positions (calculated symmetric positions)
+        // Based on console output: scaledContentWidth ≈ 22.5, totalPlatformWidth ≈ 67.5
+        const PLATFORM_WIDTH = 67.5; // Actual calculated width from game
+        const SYMMETRIC_GAP = 32; // 32px gap from centerline to platform edge
+        
+        // Calculate symmetric positions
+        const leftPlatformCenterX = CENTERLINE - SYMMETRIC_GAP - (PLATFORM_WIDTH / 2);  // ≈ 94.25
+        const rightPlatformCenterX = CENTERLINE + SYMMETRIC_GAP + (PLATFORM_WIDTH / 2); // ≈ 225.75
+        
+        const platforms = [
+            { name: "Platform 1 (bottom left)", centerX: leftPlatformCenterX, centerY: 512, side: "left" },
+            { name: "Platform 2 (second right)", centerX: rightPlatformCenterX, centerY: 480, side: "right" },
+            { name: "Platform 3 (third left)", centerX: leftPlatformCenterX, centerY: 432, side: "left" },
+            { name: "Platform 4 (top right)", centerX: rightPlatformCenterX, centerY: 400, side: "right" }
+        ];
+        
+        function runSymmetryTest() {
+            let testResults = [];
+            let allTestsPass = true;
+            
+            testResults.push('<h3 class="info">Platform Symmetry Analysis</h3>');
+            testResults.push(`<p class="info">Game Width: ${GAME_WIDTH}px</p>`);
+            testResults.push(`<p class="info">Centerline: ${CENTERLINE}px</p>`);
+            testResults.push(`<p class="info">Platform Width: ${PLATFORM_WIDTH}px</p>`);
+            testResults.push('<br>');
+            
+            const measurements = [];
+            
+            platforms.forEach((platform, index) => {
+                let leftEdge, rightEdge, innerEdge, distanceToCenter;
+                
+                // Calculate platform edges
+                leftEdge = platform.centerX - (PLATFORM_WIDTH / 2);
+                rightEdge = platform.centerX + (PLATFORM_WIDTH / 2);
+                
+                // Calculate distance from inner edge to centerline
+                if (platform.side === "left") {
+                    innerEdge = rightEdge; // Right edge of left platform
+                    distanceToCenter = CENTERLINE - innerEdge;
+                } else {
+                    innerEdge = leftEdge; // Left edge of right platform  
+                    distanceToCenter = innerEdge - CENTERLINE;
+                }
+                
+                measurements.push({
+                    platform: platform.name,
+                    side: platform.side,
+                    centerX: platform.centerX,
+                    leftEdge: leftEdge,
+                    rightEdge: rightEdge,
+                    innerEdge: innerEdge,
+                    distanceToCenter: distanceToCenter
+                });
+                
+                const measurement = `
+                    <div class="measurement">
+                        <strong>${platform.name}</strong><br>
+                        Center: ${platform.centerX}px<br>
+                        Left Edge: ${leftEdge}px<br>
+                        Right Edge: ${rightEdge}px<br>
+                        Inner Edge (closest to center): ${innerEdge}px<br>
+                        <strong>Distance to Centerline: ${distanceToCenter}px</strong>
+                    </div>
+                `;
+                testResults.push(measurement);
+            });
+            
+            // Test for symmetry
+            testResults.push('<br><h3>Symmetry Test Results:</h3>');
+            
+            // Group by pairs (platforms should be symmetric)
+            const leftPlatforms = measurements.filter(m => m.side === "left");
+            const rightPlatforms = measurements.filter(m => m.side === "right");
+            
+            testResults.push(`<p class="info">Left platforms: ${leftPlatforms.length}</p>`);
+            testResults.push(`<p class="info">Right platforms: ${rightPlatforms.length}</p>`);
+            
+            // Check if all distances are equal
+            const distances = measurements.map(m => m.distanceToCenter);
+            const uniqueDistances = [...new Set(distances)];
+            
+            testResults.push('<br><h4>Distance Analysis:</h4>');
+            distances.forEach((distance, index) => {
+                testResults.push(`<p>${measurements[index].platform}: ${distance}px from center</p>`);
+            });
+            
+            // Test result
+            const isSymmetric = uniqueDistances.length === 1 && uniqueDistances[0] > 0;
+            
+            testResults.push('<br><div class="expected">');
+            testResults.push('<h4>Expected for True Symmetry:</h4>');
+            testResults.push('<p>All platforms should have the SAME distance from their inner edge to the centerline.</p>');
+            testResults.push('<p>This ensures equal gaps between platforms and the center of the game.</p>');
+            testResults.push('</div>');
+            
+            if (isSymmetric) {
+                testResults.push(`<h3 class="pass">✅ SYMMETRY TEST PASSED</h3>`);
+                testResults.push(`<p class="pass">All platforms are ${uniqueDistances[0]}px from centerline</p>`);
+            } else {
+                testResults.push(`<h3 class="fail">❌ SYMMETRY TEST FAILED</h3>`);
+                testResults.push(`<p class="fail">Platforms have different distances: ${distances.join(', ')}px</p>`);
+                testResults.push('<br><h4 class="fail">Issues Found:</h4>');
+                
+                const targetDistance = Math.max(...distances);
+                measurements.forEach(m => {
+                    if (m.distanceToCenter !== targetDistance) {
+                        const adjustment = targetDistance - m.distanceToCenter;
+                        const direction = m.side === "left" ? "right" : "left";
+                        testResults.push(`<p class="fail">${m.platform}: Move ${Math.abs(adjustment)}px to the ${direction}</p>`);
+                    }
+                });
+                
+                allTestsPass = false;
+            }
+            
+            // Calculate correct positions for symmetry
+            testResults.push('<br><h4 class="info">Calculated Correct Positions for Perfect Symmetry:</h4>');
+            const targetGap = 32; // Let's aim for 32px gap (1 grid cell)
+            
+            leftPlatforms.forEach(platform => {
+                const correctCenterX = CENTERLINE - targetGap - (PLATFORM_WIDTH / 2);
+                testResults.push(`<p class="info">${platform.platform}: Should be centered at ${correctCenterX}px</p>`);
+            });
+            
+            rightPlatforms.forEach(platform => {
+                const correctCenterX = CENTERLINE + targetGap + (PLATFORM_WIDTH / 2);
+                testResults.push(`<p class="info">${platform.platform}: Should be centered at ${correctCenterX}px</p>`);
+            });
+            
+            return { pass: allTestsPass, results: testResults.join('') };
+        }
+        
+        // Run the test
+        const testResult = runSymmetryTest();
+        document.getElementById('results-content').innerHTML = testResult.results;
+        
+        // Log result for easy checking
+        console.log('Symmetry Test:', testResult.pass ? 'PASSED' : 'FAILED');
+    </script>
+</body>
+</html>

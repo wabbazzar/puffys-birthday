@@ -573,6 +573,17 @@ class GameScene extends Phaser.Scene {
         const blockScale = 24 / contentHeight; // Scale to maintain 24px height
         const scaledContentWidth = contentWidth * blockScale;
         
+        // Calculate total platform width for symmetry calculations
+        const totalPlatformWidth = scaledContentWidth * 3;
+        console.log(`📐 Platform measurements: contentWidth=${contentWidth}, scaledContentWidth=${scaledContentWidth.toFixed(1)}, totalPlatformWidth=${totalPlatformWidth.toFixed(1)}`);
+        
+        // Calculate symmetric positions with equal gaps from centerline
+        const centerline = width / 2; // 160px
+        const symmetricGap = 32; // 32px gap between platform edge and centerline
+        const leftPlatformCenterX = centerline - symmetricGap - (totalPlatformWidth / 2);
+        const rightPlatformCenterX = centerline + symmetricGap + (totalPlatformWidth / 2);
+        console.log(`📐 Symmetric positions: left=${leftPlatformCenterX.toFixed(1)}, right=${rightPlatformCenterX.toFixed(1)}, gap=${symmetricGap}px`);
+        
         // Helper function to create a platform of 3 blocks
         const createPlatform = (centerX, centerY) => {
             // Position blocks so they touch at content boundaries
@@ -585,26 +596,26 @@ class GameScene extends Phaser.Scene {
             }
         };
         
-        // Platform positions using symmetric grid coordinates:
-        // Mirror layout: left platforms 1 cell from left border, right platforms 1 cell from right border
+        // Platform positions using calculated symmetric coordinates:
+        // True mirror layout with equal gaps from centerline to platform edges
         
-        // Platform 1: A16-C16 (bottom left) - Center at B = 32px, Row 16 = 512px
-        createPlatform(32, 512);
+        // Platform 1: Bottom left - Row 16 = 512px
+        createPlatform(leftPlatformCenterX, 512);
 
-        // Platform 2: H15-J15 (second from bottom right) - Center at I = 288px, Row 15 = 480px  
-        createPlatform(288, 480);
+        // Platform 2: Second from bottom right - Row 15 = 480px  
+        createPlatform(rightPlatformCenterX, 480);
 
-        // Platform 3: A13.5-C13.5 (third level left) - Center at B = 32px, Row 13.5 = 432px (up half cell)
-        createPlatform(32, 432);
+        // Platform 3: Third level left - Row 13.5 = 432px (up half cell)
+        createPlatform(leftPlatformCenterX, 432);
 
-        // Platform 4: H12.5-J12.5 (top right) - Center at I = 288px, Row 12.5 = 400px (up half cell)
-        createPlatform(288, 400);
+        // Platform 4: Top right - Row 12.5 = 400px (up half cell)
+        createPlatform(rightPlatformCenterX, 400);
         
-        // Store the top platform position for gift placement (H12.5-J12.5 platform)
-        this.topPlatformX = 288; // Center of I (H12.5-J12.5 platform)
+        // Store the top platform position for gift placement (top right platform)
+        this.topPlatformX = rightPlatformCenterX; // Calculated symmetric position
         this.topPlatformY = 400;  // Row 12.5
 
-        // Add birthday gift on top platform (H12.5-J12.5)
+        // Add birthday gift on top platform (top right platform)
         // Make the gift much smaller and align its bottom with the top of the platform
         const giftScale = 0.1;
         const giftImage = this.textures.get('gift').getSourceImage();
