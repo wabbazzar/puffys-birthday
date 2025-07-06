@@ -674,9 +674,10 @@ class GameScene extends Phaser.Scene {
         // Platform 2: Second from bottom right - Row 15 = 480px  
         createPlatform(rightPlatformCenterX, 480);
 
-        // Platform 3: Third level left - Row 13.5 = 432px (up half cell) - touching left edge
+        // Platform 3: Third level left - Row 13.5 = 432px (up half cell) - moved right 1.5 grid spaces
         const leftEdgePlatformCenterX = totalPlatformWidth / 2; // Platform center when left edge touches screen edge
-        createPlatform(leftEdgePlatformCenterX, 432);
+        const platform3CenterX = leftEdgePlatformCenterX + (1.5 * 32); // Move right by 1.5 grid spaces (48px)
+        createPlatform(platform3CenterX, 432);
 
         // Platform 4: Top right - Row 12.5 = 400px (up half cell) - touching right edge
         const rightEdgePlatformCenterX = width - (totalPlatformWidth / 2); // Platform center when right edge touches screen edge
