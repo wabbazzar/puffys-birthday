@@ -594,14 +594,22 @@ class GameScene extends Phaser.Scene {
         window.checkMovingBlock = () => {
             const gameScene = window.game?.scene?.getScene('GameScene');
             if (gameScene?.movingBlock) {
+                const block = gameScene.movingBlock;
                 console.log('🚀 Moving block found:', {
-                    x: gameScene.movingBlock.x,
-                    y: gameScene.movingBlock.y,
-                    visible: gameScene.movingBlock.visible,
-                    scale: gameScene.movingBlock.scaleX,
-                    depth: gameScene.movingBlock.depth,
-                    tint: gameScene.movingBlock.tint.toString(16)
+                    position: `(${block.x.toFixed(1)}, ${block.y.toFixed(1)})`,
+                    visible: block.visible,
+                    scale: block.scaleX.toFixed(3),
+                    depth: block.depth,
+                    tint: `0x${block.tint.toString(16)}`,
+                    direction: block.direction,
+                    speed: block.speed,
+                    bounds: `${block.startX}-${block.endX}`,
+                    alpha: block.alpha,
+                    inBounds: block.x >= 0 && block.x <= 320 && block.y >= 0 && block.y <= 568
                 });
+                // Flash the block to make it easier to spot
+                block.setAlpha(0.5);
+                setTimeout(() => block.setAlpha(1), 500);
                 return gameScene.movingBlock;
             } else {
                 console.log('❌ Moving block not found!');
@@ -754,7 +762,9 @@ class GameScene extends Phaser.Scene {
         
         // Create the moving block
         this.movingBlock = this.add.image(startPos.x, startPos.y, 'block');
-        this.movingBlock.setScale(blockScale);
+        // Make the moving block a reasonable size - much larger than the tiny platform blocks
+        const movingBlockScale = 0.15; // Fixed scale to make it clearly visible (about 4x bigger than platform blocks)
+        this.movingBlock.setScale(movingBlockScale);
         this.movingBlock.setDepth(10); // Ensure it's visible above background but below UI
         this.movingBlock.setTint(0xff00ff); // Add magenta tint to make it easily visible for debugging
         
@@ -773,7 +783,7 @@ class GameScene extends Phaser.Scene {
         this.movingBlock.speed = 120;
         
         console.log(`✅ Moving block created at (${startPos.x}, ${startPos.y}) with speed ${this.movingBlock.speed}px/s`);
-        console.log(`📐 Moving block properties: scale=${blockScale.toFixed(2)}, visible=${this.movingBlock.visible}, depth=${this.movingBlock.depth}`);
+        console.log(`📐 Moving block properties: scale=${movingBlockScale.toFixed(2)}, visible=${this.movingBlock.visible}, depth=${this.movingBlock.depth}`);
     }
 
     createStyledGround(width, height) {
@@ -1070,6 +1080,11 @@ class GameScene extends Phaser.Scene {
         // Calculate movement based on delta time for consistent speed
         const deltaTime = this.game.loop.delta / 1000; // Convert ms to seconds
         const movement = this.movingBlock.speed * deltaTime * this.movingBlock.direction;
+        
+        // Debug log occasionally (every 60 frames ~ 1 second at 60fps)
+        if (this.game.loop.frame % 60 === 0) {
+            console.log(`🚀 Moving block: x=${this.movingBlock.x.toFixed(1)}, direction=${this.movingBlock.direction}, bounds=${this.movingBlock.startX}-${this.movingBlock.endX}`);
+        }
         
         // Update position
         this.movingBlock.x += movement;
