@@ -22,6 +22,10 @@ pre-commit-test: test
 # Mobile-ready game server
 serve:
 	@echo "🚀 Starting Hop Hop Puff development server..."
+	@echo ""
+	@echo "Your current IP addresses:"
+	@ifconfig | grep "inet " | grep -v 127.0.0.1 | head -3 2>/dev/null || ipconfig | findstr "IPv4" 2>/dev/null || echo "Run 'ifconfig' or 'ipconfig' to find your IP address"
+	@echo ""
 	@echo "📱 Mobile: Connect device and navigate to http://[your-ip]:8000/"
 	@echo "💻 Desktop: http://localhost:8000/"
 	@python3 -m http.server 8000 --bind 0.0.0.0 || python -m SimpleHTTPServer 8000

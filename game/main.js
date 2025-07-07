@@ -581,9 +581,19 @@ class GameScene extends Phaser.Scene {
             return this.gridSystem.pixelToGrid(x, y);
         };
         
+        // Quick moving block creation
+        window.quickMovingBlock = (startCoord, endCoord, speed = 120) => {
+            const id = `moving_block_${startCoord}_${endCoord}`;
+            return this.gridPlacement.createMovingBlock(startCoord, startCoord, endCoord, {
+                speed: speed,
+                id: id
+            });
+        };
+        
         console.log('🛠️ Grid helper functions added:');
         console.log('   quickPlatform("B12", "D12") - Quick block platform');
         console.log('   quickObject("E10", "gift") - Quick object placement');
+        console.log('   quickMovingBlock("B11", "I11") - Quick moving block');
         console.log('   checkPlacement("platform_B12_D12", "B12", "D12") - Validate');
         console.log('   gridToPixel("B12") - Convert to pixels');
         console.log('   pixelToGrid(64, 352) - Convert to grid');
@@ -639,12 +649,18 @@ class GameScene extends Phaser.Scene {
         // Calculate actual content dimensions
         const contentWidth = maxX - minX + 1;
         const contentHeight = maxY - minY + 1;
-        const blockScale = 24 / contentHeight; // Scale to maintain 24px height
+        
+        // NEW: Scale blocks to fit single grid cell (32x32px)
+        // Use the larger dimension to ensure block fits within 32x32 grid cell
+        const maxContentDimension = Math.max(contentWidth, contentHeight);
+        const blockScale = 32 / maxContentDimension; // Scale to fit 32px grid cell
         const scaledContentWidth = contentWidth * blockScale;
+        const scaledContentHeight = contentHeight * blockScale;
         
         // Calculate total platform width for symmetry calculations
         const totalPlatformWidth = scaledContentWidth * 3;
-        console.log(`📐 Platform measurements: contentWidth=${contentWidth}, scaledContentWidth=${scaledContentWidth.toFixed(1)}, totalPlatformWidth=${totalPlatformWidth.toFixed(1)}`);
+        console.log(`📐 Block measurements: original=${contentWidth}x${contentHeight}px, scaled=${scaledContentWidth.toFixed(1)}x${scaledContentHeight.toFixed(1)}px, scale=${blockScale.toFixed(2)}`);
+        console.log(`📐 Platform measurements: scaledContentWidth=${scaledContentWidth.toFixed(1)}, totalPlatformWidth=${totalPlatformWidth.toFixed(1)}`);
         
         // Calculate symmetric positions with equal gaps from centerline
         const centerline = width / 2; // 160px
@@ -687,12 +703,15 @@ class GameScene extends Phaser.Scene {
         this.topPlatformX = rightEdgePlatformCenterX; // Platform touching right edge
         this.topPlatformY = 400;  // Row 12.5
 
+        // Create moving block that travels from B11 to I11
+        this.createMovingBlock(blockScale, width, height);
+
         // Add birthday gift on top platform (top right platform)
         // Make the gift much smaller and align its bottom with the top of the platform
         const giftScale = 0.1;
         const giftImage = this.textures.get('gift').getSourceImage();
         const giftDisplayHeight = giftImage.height * giftScale;
-        const platformTop = this.topPlatformY - 12; // platforms are 24px tall, so top is y-12
+        const platformTop = this.topPlatformY - 16; // platforms are now 32px tall, so top is y-16
         const giftY = platformTop - giftDisplayHeight / 2 + giftDisplayHeight * 0.10; // sink by 10%
         this.gift = this.add.image(this.topPlatformX, giftY, 'gift');
         this.gift.setScale(giftScale);
@@ -704,6 +723,34 @@ class GameScene extends Phaser.Scene {
         this.setupPuffyWhenReady(width, height);
 
         console.log('✅ Game elements created: Puffy, styled ground, tiered platforms, and birthday gift');
+    }
+
+    createMovingBlock(blockScale, width, height) {
+        // Convert grid coordinates B11 and I11 to pixel positions
+        const startPos = this.gridSystem.gridToPixel('B11'); // B11 = column 1, row 11
+        const endPos = this.gridSystem.gridToPixel('I11');   // I11 = column 8, row 11
+        
+        console.log(`🚀 Creating moving block: B11(${startPos.x}, ${startPos.y}) to I11(${endPos.x}, ${endPos.y})`);
+        
+        // Create the moving block
+        this.movingBlock = this.add.image(startPos.x, startPos.y, 'block');
+        this.movingBlock.setScale(blockScale);
+        
+        // Add physics body for collision detection
+        this.physics.add.existing(this.movingBlock, false); // Dynamic body (not static)
+        this.movingBlock.body.setImmovable(true); // Block doesn't move when hit
+        this.platforms.add(this.movingBlock); // Add to platforms group for collision
+        
+        // Set up movement properties
+        this.movingBlock.startX = startPos.x;
+        this.movingBlock.endX = endPos.x;
+        this.movingBlock.y = startPos.y; // Y stays constant
+        this.movingBlock.direction = 1; // 1 = moving right, -1 = moving left
+        
+        // Speed matches Puffy's walking speed (120 pixels per second)
+        this.movingBlock.speed = 120;
+        
+        console.log(`✅ Moving block created at (${startPos.x}, ${startPos.y}) with speed ${this.movingBlock.speed}px/s`);
     }
 
     createStyledGround(width, height) {
@@ -947,6 +994,9 @@ class GameScene extends Phaser.Scene {
             this.toggleGrid();
         }
         
+        // Update moving block position
+        this.updateMovingBlock();
+        
         const speed = 120;
         let isMovingHorizontally = false;
 
@@ -989,6 +1039,34 @@ class GameScene extends Phaser.Scene {
         }
 
         this.isMoving = isMovingHorizontally;
+    }
+
+    updateMovingBlock() {
+        if (!this.movingBlock) return;
+        
+        // Calculate movement based on delta time for consistent speed
+        const deltaTime = this.game.loop.delta / 1000; // Convert ms to seconds
+        const movement = this.movingBlock.speed * deltaTime * this.movingBlock.direction;
+        
+        // Update position
+        this.movingBlock.x += movement;
+        
+        // Check boundaries and reverse direction
+        if (this.movingBlock.direction === 1 && this.movingBlock.x >= this.movingBlock.endX) {
+            // Hit right boundary, reverse direction
+            this.movingBlock.x = this.movingBlock.endX;
+            this.movingBlock.direction = -1;
+        } else if (this.movingBlock.direction === -1 && this.movingBlock.x <= this.movingBlock.startX) {
+            // Hit left boundary, reverse direction
+            this.movingBlock.x = this.movingBlock.startX;
+            this.movingBlock.direction = 1;
+        }
+        
+        // Update physics body position to match sprite position
+        if (this.movingBlock.body) {
+            this.movingBlock.body.setPosition(this.movingBlock.x - this.movingBlock.width / 2, 
+                                             this.movingBlock.y - this.movingBlock.height / 2);
+        }
     }
 
     showBirthdayInvitation() {

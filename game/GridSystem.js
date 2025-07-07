@@ -215,7 +215,10 @@ class GridPlacement {
         
         const contentWidth = maxX - minX + 1;
         const contentHeight = maxY - minY + 1;
-        const scale = 24 / contentHeight; // Match platform height
+        
+        // NEW: Scale blocks to fit single grid cell (32x32px)
+        const maxContentDimension = Math.max(contentWidth, contentHeight);
+        const scale = 32 / maxContentDimension; // Scale to fit 32px grid cell
         const scaledContentWidth = contentWidth * scale;
         
         // Calculate how many blocks fit in the span
@@ -251,6 +254,83 @@ class GridPlacement {
         
         console.log(`   Created ${numBlocks} blocks for platform`);
         return blocks;
+    }
+    
+    // Create a moving block at a grid coordinate
+    createMovingBlock(coord, startCoord, endCoord, options = {}) {
+        try {
+            const position = this.grid.gridToPixel(coord);
+            const startPos = this.grid.gridToPixel(startCoord);
+            const endPos = this.grid.gridToPixel(endCoord);
+            const id = options.id || `moving_block_${coord}_${startCoord}_${endCoord}`;
+            
+            console.log(`🚀 Creating moving block ${id} at ${coord}, traveling ${startCoord} to ${endCoord}`);
+            
+            // Use the same block analysis as platforms
+            const blockTexture = this.scene.textures.get('block').getSourceImage();
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = blockTexture.width;
+            canvas.height = blockTexture.height;
+            ctx.drawImage(blockTexture, 0, 0);
+            
+            const imageData = ctx.getImageData(0, 0, blockTexture.width, blockTexture.height);
+            const data = imageData.data;
+            
+            let minX = blockTexture.width, maxX = 0, minY = blockTexture.height, maxY = 0;
+            for (let y = 0; y < blockTexture.height; y++) {
+                for (let x = 0; x < blockTexture.width; x++) {
+                    const alpha = data[(y * blockTexture.width + x) * 4 + 3];
+                    if (alpha > 0) {
+                        minX = Math.min(minX, x);
+                        maxX = Math.max(maxX, x);
+                        minY = Math.min(minY, y);
+                        maxY = Math.max(maxY, y);
+                    }
+                }
+            }
+            
+            const contentWidth = maxX - minX + 1;
+            const contentHeight = maxY - minY + 1;
+            const maxContentDimension = Math.max(contentWidth, contentHeight);
+            const scale = 32 / maxContentDimension;
+            
+            // Create the moving block
+            const block = this.scene.add.image(position.x, position.y, 'block');
+            block.setScale(scale);
+            
+            // Add physics and movement properties
+            if (options.physics !== false) {
+                this.scene.physics.add.existing(block, false); // Dynamic body
+                block.body.setImmovable(true);
+                if (this.scene.platforms) {
+                    this.scene.platforms.add(block);
+                }
+            }
+            
+            // Set movement properties
+            block.startX = startPos.x;
+            block.endX = endPos.x;
+            block.direction = 1; // 1 = moving right, -1 = moving left
+            block.speed = options.speed || 120; // Default to Puffy's speed
+            
+            this.placedObjects.set(id, {
+                object: block,
+                type: 'movingBlock',
+                coord,
+                startCoord,
+                endCoord,
+                position,
+                speed: block.speed
+            });
+            
+            console.log(`✅ Moving block created: ${scaledContentWidth.toFixed(1)}x${scaledContentWidth.toFixed(1)}px, speed=${block.speed}px/s`);
+            return block;
+            
+        } catch (error) {
+            console.error(`❌ Failed to create moving block:`, error.message);
+            throw error;
+        }
     }
     
     // Place any game object at a grid coordinate
