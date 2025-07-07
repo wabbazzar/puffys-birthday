@@ -780,8 +780,12 @@ class GameScene extends Phaser.Scene {
         this.movingBlock.direction = 1;        // 1 = moving right (toward G11), -1 = moving left (toward D11)
         this.movingBlock.speed = 120;          // Same speed as Puffy's walking
         
+        // Add protection against accidental destruction
+        this.movingBlock.setData('protected', true);
+        
         console.log(`✅ Moving block created: D11→G11 at speed ${this.movingBlock.speed}px/s`);
         console.log(`📐 Block properties: scale=${blockScale.toFixed(3)}, range=${this.movingBlock.startX}-${this.movingBlock.endX}`);
+        console.log(`🛡️ Block protected and ready for movement`);
     }
 
     createStyledGround(width, height) {
@@ -1073,29 +1077,52 @@ class GameScene extends Phaser.Scene {
     }
 
     updateMovingBlock() {
-        if (!this.movingBlock) return;
-        
-        // Calculate movement based on delta time for consistent speed
-        const deltaTime = this.game.loop.delta / 1000; // Convert ms to seconds
-        const movement = this.movingBlock.speed * deltaTime * this.movingBlock.direction;
-        
-        // Debug log occasionally (every 60 frames ~ 1 second at 60fps)
-        if (this.game.loop.frame % 60 === 0) {
-            console.log(`🚀 Moving block: x=${this.movingBlock.x.toFixed(1)}, direction=${this.movingBlock.direction}, bounds=${this.movingBlock.startX}-${this.movingBlock.endX}`);
+        if (!this.movingBlock) {
+            console.log('❌ updateMovingBlock: movingBlock is null!');
+            return;
         }
+        
+        // Check if block still exists and is visible
+        if (!this.movingBlock.active || !this.movingBlock.visible) {
+            console.log('❌ Moving block became inactive or invisible!', {
+                active: this.movingBlock.active,
+                visible: this.movingBlock.visible,
+                x: this.movingBlock.x,
+                y: this.movingBlock.y
+            });
+            return;
+        }
+        
+        // Use simple fixed movement per frame (much more reliable)
+        // At 60 FPS: 120px/s ÷ 60 = 2px per frame
+        const movement = 2 * this.movingBlock.direction;
+        
+        const oldX = this.movingBlock.x;
         
         // Update position
         this.movingBlock.x += movement;
         
+        // INTENSIVE DEBUG - log every frame for first 5 seconds
+        if (this.game.loop.frame < 300) {
+            console.log(`🔍 Frame ${this.game.loop.frame}: x=${oldX.toFixed(1)}→${this.movingBlock.x.toFixed(1)}, dir=${this.movingBlock.direction}, movement=${movement.toFixed(2)}, bounds=${this.movingBlock.startX}-${this.movingBlock.endX}`);
+        }
+        
         // Check boundaries and reverse direction
         if (this.movingBlock.direction === 1 && this.movingBlock.x >= this.movingBlock.endX) {
             // Hit right boundary, reverse direction
+            console.log(`🔄 Hit right boundary at ${this.movingBlock.x}, reversing to left`);
             this.movingBlock.x = this.movingBlock.endX;
             this.movingBlock.direction = -1;
         } else if (this.movingBlock.direction === -1 && this.movingBlock.x <= this.movingBlock.startX) {
             // Hit left boundary, reverse direction
+            console.log(`🔄 Hit left boundary at ${this.movingBlock.x}, reversing to right`);
             this.movingBlock.x = this.movingBlock.startX;
             this.movingBlock.direction = 1;
+        }
+        
+        // Check if position is reasonable
+        if (this.movingBlock.x < 0 || this.movingBlock.x > 320) {
+            console.log(`⚠️ Block position out of bounds: ${this.movingBlock.x}`);
         }
         
         // Update physics body position to match sprite position
@@ -1103,6 +1130,8 @@ class GameScene extends Phaser.Scene {
             // For Phaser Arcade Physics, use x and y properties or setX/setY methods
             this.movingBlock.body.x = this.movingBlock.x - this.movingBlock.width / 2;
             this.movingBlock.body.y = this.movingBlock.y - this.movingBlock.height / 2;
+        } else {
+            console.log('⚠️ Moving block has no physics body!');
         }
     }
 
