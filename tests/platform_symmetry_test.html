@@ -59,15 +59,15 @@
         const leftPlatformCenterX = CENTERLINE - SYMMETRIC_GAP - (PLATFORM_WIDTH / 2);  // ≈ 94.25
         const rightPlatformCenterX = CENTERLINE + SYMMETRIC_GAP + (PLATFORM_WIDTH / 2); // ≈ 225.75
         
-        // Platforms 3 & 4 positions (Platform 3 moved right 1.5 grid spaces)
+        // Platforms 3 & 4 positions (Platform 3 moved right 0.5 grid spaces from edge)
         const leftEdgePlatformCenterX = PLATFORM_WIDTH / 2; // Platform center when left edge touches screen edge
-        const platform3CenterX = leftEdgePlatformCenterX + (1.5 * 32); // Platform 3 moved right 1.5 grid spaces (48px)
+        const platform3CenterX = leftEdgePlatformCenterX + (0.5 * 32); // Platform 3 moved right 0.5 grid spaces (16px) - spans A14-C14
         const rightEdgePlatformCenterX = GAME_WIDTH - (PLATFORM_WIDTH / 2); // Platform center when right edge touches screen edge
         
         const platforms = [
             { name: "Platform 1 (bottom left)", centerX: leftPlatformCenterX, centerY: 512, side: "left" },
             { name: "Platform 2 (second right)", centerX: rightPlatformCenterX, centerY: 480, side: "right" },
-            { name: "Platform 3 (third left - moved)", centerX: platform3CenterX, centerY: 432, side: "left", touchesEdge: false },
+            { name: "Platform 3 (third left - A14-C14)", centerX: platform3CenterX, centerY: 432, side: "left", touchesEdge: false },
             { name: "Platform 4 (top right - edge)", centerX: rightEdgePlatformCenterX, centerY: 400, side: "right", touchesEdge: true }
         ];
         
@@ -161,7 +161,7 @@
             testResults.push('<br><div class="expected">');
             testResults.push('<h4>Expected Layout:</h4>');
             testResults.push('<p>Platforms 1 & 2: Symmetric with 32px gaps from centerline</p>');
-            testResults.push('<p>Platform 3: Moved right 1.5 grid spaces from left edge</p>');
+            testResults.push('<p>Platform 3: Positioned at A14-C14 (0.5 grid spaces from left edge)</p>');
             testResults.push('<p>Platform 4: Touching the right edge of the screen</p>');
             testResults.push('</div>');
             
@@ -174,11 +174,11 @@
                 }
             });
             
-            // Check Platform 3 position (should be 1.5 grid spaces from left edge)
+            // Check Platform 3 position (should be 0.5 grid spaces from left edge)
             const platform3 = measurements.find(m => m.platform.includes("Platform 3"));
             let platform3Correct = false;
             if (platform3) {
-                const expectedLeftEdge = 1.5 * 32; // 1.5 grid spaces = 48px
+                const expectedLeftEdge = 0.5 * 32; // 0.5 grid spaces = 16px
                 const actualDistance = platform3.leftEdge;
                 platform3Correct = Math.abs(actualDistance - expectedLeftEdge) < 1; // Allow 1px tolerance
             }
@@ -186,7 +186,7 @@
             if (isSymmetric && edgeTouchingCorrect && platform3Correct) {
                 testResults.push(`<h3 class="pass">✅ ALL TESTS PASSED</h3>`);
                 testResults.push(`<p class="pass">Platforms 1 & 2 are symmetric (${uniqueNonEdgeDistances[0]}px from centerline)</p>`);
-                testResults.push(`<p class="pass">Platform 3 is positioned correctly (1.5 grid spaces from left)</p>`);
+                testResults.push(`<p class="pass">Platform 3 is positioned correctly at A14-C14 (0.5 grid spaces from left)</p>`);
                 testResults.push(`<p class="pass">Platform 4 is touching the right screen edge</p>`);
             } else {
                 testResults.push(`<h3 class="fail">❌ TEST FAILED</h3>`);
@@ -194,7 +194,7 @@
                     testResults.push(`<p class="fail">Platforms 1 & 2 have different distances: ${nonEdgeDistances.join(', ')}px</p>`);
                 }
                 if (!platform3Correct) {
-                    testResults.push(`<p class="fail">Platform 3 is not positioned correctly (should be 48px from left edge)</p>`);
+                    testResults.push(`<p class="fail">Platform 3 is not positioned correctly (should be 16px from left edge for A14-C14)</p>`);
                 }
                 if (!edgeTouchingCorrect) {
                     testResults.push(`<p class="fail">Platform 4 is not touching the right edge properly</p>`);

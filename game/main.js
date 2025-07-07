@@ -590,10 +590,30 @@ class GameScene extends Phaser.Scene {
             });
         };
         
+        // Debug function to check if main moving block exists
+        window.checkMovingBlock = () => {
+            const gameScene = window.game?.scene?.getScene('GameScene');
+            if (gameScene?.movingBlock) {
+                console.log('🚀 Moving block found:', {
+                    x: gameScene.movingBlock.x,
+                    y: gameScene.movingBlock.y,
+                    visible: gameScene.movingBlock.visible,
+                    scale: gameScene.movingBlock.scaleX,
+                    depth: gameScene.movingBlock.depth,
+                    tint: gameScene.movingBlock.tint.toString(16)
+                });
+                return gameScene.movingBlock;
+            } else {
+                console.log('❌ Moving block not found!');
+                return null;
+            }
+        };
+        
         console.log('🛠️ Grid helper functions added:');
         console.log('   quickPlatform("B12", "D12") - Quick block platform');
         console.log('   quickObject("E10", "gift") - Quick object placement');
         console.log('   quickMovingBlock("B11", "I11") - Quick moving block');
+        console.log('   checkMovingBlock() - Check main moving block status');
         console.log('   checkPlacement("platform_B12_D12", "B12", "D12") - Validate');
         console.log('   gridToPixel("B12") - Convert to pixels');
         console.log('   pixelToGrid(64, 352) - Convert to grid');
@@ -690,9 +710,9 @@ class GameScene extends Phaser.Scene {
         // Platform 2: Second from bottom right - Row 15 = 480px  
         createPlatform(rightPlatformCenterX, 480);
 
-        // Platform 3: Third level left - Row 13.5 = 432px (up half cell) - moved right 1.5 grid spaces
+        // Platform 3: Third level left - Row 13.5 = 432px (up half cell) - moved right 0.5 grid spaces (was 1.5, moved left by 1)
         const leftEdgePlatformCenterX = totalPlatformWidth / 2; // Platform center when left edge touches screen edge
-        const platform3CenterX = leftEdgePlatformCenterX + (1.5 * 32); // Move right by 1.5 grid spaces (48px)
+        const platform3CenterX = leftEdgePlatformCenterX + (0.5 * 32); // Move right by 0.5 grid spaces (16px) - spans A14-C14
         createPlatform(platform3CenterX, 432);
 
         // Platform 4: Top right - Row 12.5 = 400px (up half cell) - touching right edge
@@ -735,6 +755,8 @@ class GameScene extends Phaser.Scene {
         // Create the moving block
         this.movingBlock = this.add.image(startPos.x, startPos.y, 'block');
         this.movingBlock.setScale(blockScale);
+        this.movingBlock.setDepth(10); // Ensure it's visible above background but below UI
+        this.movingBlock.setTint(0xff00ff); // Add magenta tint to make it easily visible for debugging
         
         // Add physics body for collision detection
         this.physics.add.existing(this.movingBlock, false); // Dynamic body (not static)
@@ -751,6 +773,7 @@ class GameScene extends Phaser.Scene {
         this.movingBlock.speed = 120;
         
         console.log(`✅ Moving block created at (${startPos.x}, ${startPos.y}) with speed ${this.movingBlock.speed}px/s`);
+        console.log(`📐 Moving block properties: scale=${blockScale.toFixed(2)}, visible=${this.movingBlock.visible}, depth=${this.movingBlock.depth}`);
     }
 
     createStyledGround(width, height) {
