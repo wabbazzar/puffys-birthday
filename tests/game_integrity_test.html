@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Integrity Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #2a2a2a;
+            color: white;
+        }
+        .test-results {
+            background: #333;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .pass { color: #00ff00; }
+        .fail { color: #ff0000; }
+        .info { color: #00ffff; }
+        .warning { color: #ffaa00; }
+        button {
+            background: #666;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover { background: #777; }
+        .critical-fail {
+            background: #660000;
+            color: #ffcccc;
+            border: 2px solid #ff0000;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Game Integrity Test Suite</h1>
+    <p>Comprehensive tests to catch critical game issues before commit.</p>
+    
+    <button onclick="runAllTests()">Run All Tests</button>
+    <button onclick="runPuffyTests()">Test Puffy Only</button>
+    <button onclick="runMovingBlockTests()">Test Moving Block Only</button>
+    <button onclick="runPhysicsTests()">Test Physics Only</button>
+    
+    <div id="test-results" class="test-results">
+        <h3>Test Results</h3>
+        <div id="results-content">
+            <p class="info">Click a button above to run tests. Make sure the main game is loaded first!</p>
+        </div>
+    </div>
+
+    <script>
+        let testResults = [];
+        let criticalErrors = 0;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            testResults.push(`<span class="${type}">[${timestamp}] ${message}</span>`);
+            updateResultsDisplay();
+        }
+        
+        function updateResultsDisplay() {
+            const content = document.getElementById('results-content');
+            content.innerHTML = testResults.slice(-100).join('<br>');
+            content.scrollTop = content.scrollHeight;
+        }
+        
+        function criticalError(message) {
+            criticalErrors++;
+            log(`🚨 CRITICAL: ${message}`, 'fail');
+            
+            // Add visual critical error alert
+            const criticalDiv = document.createElement('div');
+            criticalDiv.className = 'critical-fail';
+            criticalDiv.innerHTML = `<strong>CRITICAL ERROR #${criticalErrors}:</strong> ${message}`;
+            document.body.insertBefore(criticalDiv, document.getElementById('test-results'));
+        }
+        
+        function checkGameLoaded() {
+            if (!window.game || !window.game.scene) {
+                criticalError('Game not loaded! Load the main game first.');
+                return false;
+            }
+            return true;
+        }
+        
+        function getGameScene() {
+            if (!checkGameLoaded()) return null;
+            
+            const scenes = window.game.scene.scenes;
+            const gameScene = scenes.find(scene => scene.scene.key === 'GameScene');
+            
+            if (!gameScene) {
+                criticalError('GameScene not found! Game may not be properly initialized.');
+                return null;
+            }
+            
+            return gameScene;
+        }
+        
+        function testPuffyVisibility() {
+            log('🐱 Testing Puffy sprite visibility and positioning...', 'info');
+            
+            const gameScene = getGameScene();
+            if (!gameScene) return false;
+            
+            let passed = true;
+            
+            // Test 1: Puffy object exists
+            if (!gameScene.puffy) {
+                criticalError('Puffy object not found in game scene!');
+                passed = false;
+            } else {
+                log('✅ Puffy object exists', 'pass');
+            }
+            
+            // Test 2: Puffy sprite exists
+            if (!gameScene.puffy?.sprite) {
+                criticalError('Puffy sprite not created!');
+                passed = false;
+            } else {
+                log('✅ Puffy sprite exists', 'pass');
+                
+                // Test 3: Puffy is visible
+                if (!gameScene.puffy.sprite.visible) {
+                    criticalError('Puffy sprite is not visible!');
+                    passed = false;
+                } else {
+                    log('✅ Puffy sprite is visible', 'pass');
+                }
+                
+                // Test 4: Puffy position is reasonable
+                const puffyX = gameScene.puffy.sprite.x;
+                const puffyY = gameScene.puffy.sprite.y;
+                
+                if (puffyX < 0 || puffyX > 320 || puffyY < 0 || puffyY > 568) {
+                    criticalError(`Puffy position out of bounds: (${puffyX}, ${puffyY})`);
+                    passed = false;
+                } else {
+                    log(`✅ Puffy position reasonable: (${puffyX}, ${puffyY})`, 'pass');
+                }
+                
+                // Test 5: Puffy is ready
+                if (!gameScene.puffy.isReady) {
+                    log('⚠️ Puffy not ready yet (may be loading)', 'warning');
+                } else {
+                    log('✅ Puffy is ready', 'pass');
+                }
+            }
+            
+            return passed;
+        }
+        
+        function testMovingBlockExistence() {
+            log('🚀 Testing moving block existence and properties...', 'info');
+            
+            const gameScene = getGameScene();
+            if (!gameScene) return false;
+            
+            let passed = true;
+            
+            // Test 1: Moving block exists
+            if (!gameScene.movingBlock) {
+                criticalError('Moving block not found in game scene!');
+                passed = false;
+            } else {
+                log('✅ Moving block exists', 'pass');
+                
+                // Test 2: Moving block is visible
+                if (!gameScene.movingBlock.visible) {
+                    criticalError('Moving block is not visible!');
+                    passed = false;
+                } else {
+                    log('✅ Moving block is visible', 'pass');
+                }
+                
+                // Test 3: Moving block has required properties
+                const requiredProps = ['startX', 'endX', 'direction', 'speed'];
+                for (const prop of requiredProps) {
+                    if (gameScene.movingBlock[prop] === undefined) {
+                        criticalError(`Moving block missing property: ${prop}`);
+                        passed = false;
+                    } else {
+                        log(`✅ Moving block has ${prop}: ${gameScene.movingBlock[prop]}`, 'pass');
+                    }
+                }
+                
+                // Test 4: Moving block position is reasonable
+                const blockX = gameScene.movingBlock.x;
+                const blockY = gameScene.movingBlock.y;
+                
+                if (blockX < 0 || blockX > 320 || blockY < 0 || blockY > 568) {
+                    criticalError(`Moving block position out of bounds: (${blockX}, ${blockY})`);
+                    passed = false;
+                } else {
+                    log(`✅ Moving block position reasonable: (${blockX}, ${blockY})`, 'pass');
+                }
+            }
+            
+            return passed;
+        }
+        
+        function testMovingBlockPhysics() {
+            log('⚡ Testing moving block physics body...', 'info');
+            
+            const gameScene = getGameScene();
+            if (!gameScene) return false;
+            
+            let passed = true;
+            
+            if (!gameScene.movingBlock) {
+                criticalError('Moving block not found!');
+                return false;
+            }
+            
+            // Test 1: Physics body exists
+            if (!gameScene.movingBlock.body) {
+                criticalError('Moving block physics body not found!');
+                passed = false;
+            } else {
+                log('✅ Moving block has physics body', 'pass');
+                
+                // Test 2: Physics body has required properties and methods
+                const requiredProps = ['x', 'y'];
+                for (const prop of requiredProps) {
+                    if (gameScene.movingBlock.body[prop] === undefined) {
+                        criticalError(`Moving block physics body missing property: ${prop}`);
+                        passed = false;
+                    } else {
+                        log(`✅ Physics body has ${prop} property`, 'pass');
+                    }
+                }
+                
+                // Test 3: Test updating physics body position (should not throw error)
+                try {
+                    const currentX = gameScene.movingBlock.x;
+                    const currentY = gameScene.movingBlock.y;
+                    gameScene.movingBlock.body.x = currentX - gameScene.movingBlock.width / 2;
+                    gameScene.movingBlock.body.y = currentY - gameScene.movingBlock.height / 2;
+                    log('✅ Physics body position update works correctly', 'pass');
+                } catch (error) {
+                    criticalError(`Physics body position update failed: ${error.message}`);
+                    passed = false;
+                }
+            }
+            
+            return passed;
+        }
+        
+        function testMovingBlockMovement() {
+            log('🏃 Testing moving block movement...', 'info');
+            
+            const gameScene = getGameScene();
+            if (!gameScene) return false;
+            
+            if (!gameScene.movingBlock) {
+                criticalError('Moving block not found!');
+                return false;
+            }
+            
+            // Test movement by simulating update calls
+            const initialX = gameScene.movingBlock.x;
+            const initialDirection = gameScene.movingBlock.direction;
+            
+            // Simulate a few updates
+            for (let i = 0; i < 3; i++) {
+                try {
+                    gameScene.updateMovingBlock();
+                } catch (error) {
+                    criticalError(`Moving block update failed: ${error.message}`);
+                    return false;
+                }
+            }
+            
+            const newX = gameScene.movingBlock.x;
+            
+            if (initialDirection === 1 && newX <= initialX) {
+                log('⚠️ Moving block not moving right as expected', 'warning');
+            } else if (initialDirection === -1 && newX >= initialX) {
+                log('⚠️ Moving block not moving left as expected', 'warning');
+            } else {
+                log(`✅ Moving block movement working: ${initialX} → ${newX}`, 'pass');
+            }
+            
+            return true;
+        }
+        
+        function testCollisionSetup() {
+            log('💥 Testing collision setup...', 'info');
+            
+            const gameScene = getGameScene();
+            if (!gameScene) return false;
+            
+            let passed = true;
+            
+            // Test platforms group exists
+            if (!gameScene.platforms) {
+                criticalError('Platforms physics group not found!');
+                passed = false;
+            } else {
+                log('✅ Platforms physics group exists', 'pass');
+                
+                // Test moving block is in platforms group
+                if (gameScene.movingBlock && !gameScene.platforms.contains(gameScene.movingBlock)) {
+                    criticalError('Moving block not added to platforms group!');
+                    passed = false;
+                } else if (gameScene.movingBlock) {
+                    log('✅ Moving block is in platforms group', 'pass');
+                }
+            }
+            
+            return passed;
+        }
+        
+        function runPuffyTests() {
+            log('🧪 Running Puffy Tests...', 'info');
+            criticalErrors = 0;
+            
+            const puffyPass = testPuffyVisibility();
+            
+            if (puffyPass && criticalErrors === 0) {
+                log('🎉 All Puffy tests PASSED!', 'pass');
+            } else {
+                log(`❌ Puffy tests FAILED with ${criticalErrors} critical errors`, 'fail');
+            }
+            
+            return puffyPass && criticalErrors === 0;
+        }
+        
+        function runMovingBlockTests() {
+            log('🧪 Running Moving Block Tests...', 'info');
+            criticalErrors = 0;
+            
+            const existencePass = testMovingBlockExistence();
+            const physicsPass = testMovingBlockPhysics();
+            const movementPass = testMovingBlockMovement();
+            
+            const allPass = existencePass && physicsPass && movementPass;
+            
+            if (allPass && criticalErrors === 0) {
+                log('🎉 All Moving Block tests PASSED!', 'pass');
+            } else {
+                log(`❌ Moving Block tests FAILED with ${criticalErrors} critical errors`, 'fail');
+            }
+            
+            return allPass && criticalErrors === 0;
+        }
+        
+        function runPhysicsTests() {
+            log('🧪 Running Physics Tests...', 'info');
+            criticalErrors = 0;
+            
+            const collisionPass = testCollisionSetup();
+            
+            if (collisionPass && criticalErrors === 0) {
+                log('🎉 All Physics tests PASSED!', 'pass');
+            } else {
+                log(`❌ Physics tests FAILED with ${criticalErrors} critical errors`, 'fail');
+            }
+            
+            return collisionPass && criticalErrors === 0;
+        }
+        
+        function runAllTests() {
+            log('🧪 Running Complete Game Integrity Test Suite...', 'info');
+            criticalErrors = 0;
+            
+            if (!checkGameLoaded()) {
+                return false;
+            }
+            
+            const puffyPass = runPuffyTests();
+            const blockPass = runMovingBlockTests();
+            const physicsPass = runPhysicsTests();
+            
+            const overallPass = puffyPass && blockPass && physicsPass;
+            
+            log('', 'info');
+            log('📊 FINAL RESULTS:', 'info');
+            log(`   Puffy Tests: ${puffyPass ? 'PASS' : 'FAIL'}`, puffyPass ? 'pass' : 'fail');
+            log(`   Moving Block Tests: ${blockPass ? 'PASS' : 'FAIL'}`, blockPass ? 'pass' : 'fail');
+            log(`   Physics Tests: ${physicsPass ? 'PASS' : 'FAIL'}`, physicsPass ? 'pass' : 'fail');
+            log(`   Critical Errors: ${criticalErrors}`, criticalErrors === 0 ? 'pass' : 'fail');
+            log('', 'info');
+            
+            if (overallPass && criticalErrors === 0) {
+                log('🎉 ALL TESTS PASSED! Game is ready for commit.', 'pass');
+            } else {
+                log('❌ TESTS FAILED! Do NOT commit until issues are fixed.', 'fail');
+            }
+            
+            return overallPass && criticalErrors === 0;
+        }
+        
+        // Initialize
+        log('🧪 Game Integrity Test System ready!', 'pass');
+        log('💡 Load the main game first, then run tests to check for critical issues.', 'info');
+    </script>
+</body>
+</html>

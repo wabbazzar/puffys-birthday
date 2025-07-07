@@ -828,9 +828,9 @@ class GameScene extends Phaser.Scene {
             if (this.puffy && this.puffy.spriteSheetReady && !this.puffy.sprite) {
                 console.log('✅ Puffy sprite sheet is ready! Creating sprite...');
                 
-                // Create sprite at correct position - adjusted for taller ground
-                const targetX = width * 0.3;
-                const targetY = height - 80;
+                // Create sprite at correct position - above the 24px ground
+                const targetX = width * 0.3; // 30% from left (96px)
+                const targetY = height - 24 - 24; // Ground height (24px) + Puffy height (24px) above ground
                 this.puffy.createSprite(targetX, targetY);
                 this.puffy.startInitialAnimation();
                 
@@ -1064,8 +1064,9 @@ class GameScene extends Phaser.Scene {
         
         // Update physics body position to match sprite position
         if (this.movingBlock.body) {
-            this.movingBlock.body.setPosition(this.movingBlock.x - this.movingBlock.width / 2, 
-                                             this.movingBlock.y - this.movingBlock.height / 2);
+            // For Phaser Arcade Physics, use x and y properties or setX/setY methods
+            this.movingBlock.body.x = this.movingBlock.x - this.movingBlock.width / 2;
+            this.movingBlock.body.y = this.movingBlock.y - this.movingBlock.height / 2;
         }
     }
 

@@ -68,6 +68,11 @@ game-test:
 	@echo "🎮 Opening main game..."
 	@open http://localhost:8000/index.html || xdg-open http://localhost:8000/index.html || echo "Navigate to: http://localhost:8000/index.html"
 
+# Game integrity testing
+integrity-test:
+	@echo "🧪 Running game integrity test..."
+	@open http://localhost:8000/tests/game_integrity_test.html || xdg-open http://localhost:8000/tests/game_integrity_test.html || echo "Navigate to: http://localhost:8000/tests/game_integrity_test.html"
+
 # Mobile-specific game testing
 mobile-test:
 	@echo "📱 Opening mobile touch test..."
@@ -216,6 +221,7 @@ help:
 	@echo ""
 	@echo "Testing Commands:"
 	@echo "  make game-test     Open main game (index.html)"
+	@echo "  make integrity-test Test game integrity (Puffy, moving blocks, physics)"
 	@echo "  make mobile-test   Test mobile touch controls and virtual D-pad"
 	@echo "  make visual-test   Test cross-platform Phaser.js canvas rendering"
 	@echo "  make touch-test    Test touch event handling and latency"
