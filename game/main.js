@@ -590,29 +590,27 @@ class GameScene extends Phaser.Scene {
             });
         };
         
-        // Debug function to check if main moving block exists
+        // Debug function to check if stationary block exists
         window.checkMovingBlock = () => {
             const gameScene = window.game?.scene?.getScene('GameScene');
             if (gameScene?.movingBlock) {
                 const block = gameScene.movingBlock;
-                console.log('🚀 Moving block found:', {
+                console.log('🔳 Stationary block found at D11:', {
                     position: `(${block.x.toFixed(1)}, ${block.y.toFixed(1)})`,
                     visible: block.visible,
                     scale: block.scaleX.toFixed(3),
                     depth: block.depth,
                     tint: `0x${block.tint.toString(16)}`,
-                    direction: block.direction,
-                    speed: block.speed,
-                    bounds: `${block.startX}-${block.endX}`,
                     alpha: block.alpha,
-                    inBounds: block.x >= 0 && block.x <= 320 && block.y >= 0 && block.y <= 568
+                    inBounds: block.x >= 0 && block.x <= 320 && block.y >= 0 && block.y <= 568,
+                    isStatic: block.body?.moves === false
                 });
                 // Flash the block to make it easier to spot
                 block.setAlpha(0.5);
                 setTimeout(() => block.setAlpha(1), 500);
                 return gameScene.movingBlock;
             } else {
-                console.log('❌ Moving block not found!');
+                console.log('❌ Stationary block not found!');
                 return null;
             }
         };
@@ -621,7 +619,7 @@ class GameScene extends Phaser.Scene {
         console.log('   quickPlatform("B12", "D12") - Quick block platform');
         console.log('   quickObject("E10", "gift") - Quick object placement');
         console.log('   quickMovingBlock("B11", "I11") - Quick moving block');
-        console.log('   checkMovingBlock() - Check main moving block status');
+        console.log('   checkMovingBlock() - Check stationary block at D11');
         console.log('   checkPlacement("platform_B12_D12", "B12", "D12") - Validate');
         console.log('   gridToPixel("B12") - Convert to pixels');
         console.log('   pixelToGrid(64, 352) - Convert to grid');
@@ -754,36 +752,30 @@ class GameScene extends Phaser.Scene {
     }
 
     createMovingBlock(blockScale, width, height) {
-        // Convert grid coordinates B11 and I11 to pixel positions
-        const startPos = this.gridSystem.gridToPixel('B11'); // B11 = column 1, row 11
-        const endPos = this.gridSystem.gridToPixel('I11');   // I11 = column 8, row 11
+        // Place block stationary at D11 for now
+        const blockPos = this.gridSystem.gridToPixel('D11'); // D11 = column 3, row 11
         
-        console.log(`🚀 Creating moving block: B11(${startPos.x}, ${startPos.y}) to I11(${endPos.x}, ${endPos.y})`);
+        console.log(`🚀 Creating stationary block at D11(${blockPos.x}, ${blockPos.y})`);
         
-        // Create the moving block
-        this.movingBlock = this.add.image(startPos.x, startPos.y, 'block');
-        // Make the moving block a reasonable size - much larger than the tiny platform blocks
-        const movingBlockScale = 0.15; // Fixed scale to make it clearly visible (about 4x bigger than platform blocks)
-        this.movingBlock.setScale(movingBlockScale);
+        // Create the moving block (stationary for now)
+        this.movingBlock = this.add.image(blockPos.x, blockPos.y, 'block');
+        // Use the same scale as platform blocks to match size
+        this.movingBlock.setScale(blockScale); // Same as platform blocks for consistent 1 grid cell size
         this.movingBlock.setDepth(10); // Ensure it's visible above background but below UI
         this.movingBlock.setTint(0xff00ff); // Add magenta tint to make it easily visible for debugging
         
         // Add physics body for collision detection
-        this.physics.add.existing(this.movingBlock, false); // Dynamic body (not static)
-        this.movingBlock.body.setImmovable(true); // Block doesn't move when hit
+        this.physics.add.existing(this.movingBlock, true); // Static body for now (not moving)
         this.platforms.add(this.movingBlock); // Add to platforms group for collision
         
-        // Set up movement properties
-        this.movingBlock.startX = startPos.x;
-        this.movingBlock.endX = endPos.x;
-        this.movingBlock.y = startPos.y; // Y stays constant
-        this.movingBlock.direction = 1; // 1 = moving right, -1 = moving left
+        // Remove movement properties for now - make it stationary
+        // this.movingBlock.startX = startPos.x;
+        // this.movingBlock.endX = endPos.x;
+        // this.movingBlock.direction = 1;
+        // this.movingBlock.speed = 120;
         
-        // Speed matches Puffy's walking speed (120 pixels per second)
-        this.movingBlock.speed = 120;
-        
-        console.log(`✅ Moving block created at (${startPos.x}, ${startPos.y}) with speed ${this.movingBlock.speed}px/s`);
-        console.log(`📐 Moving block properties: scale=${movingBlockScale.toFixed(2)}, visible=${this.movingBlock.visible}, depth=${this.movingBlock.depth}`);
+        console.log(`✅ Stationary block created at D11(${blockPos.x}, ${blockPos.y})`);
+        console.log(`📐 Block properties: scale=${blockScale.toFixed(3)}, visible=${this.movingBlock.visible}, depth=${this.movingBlock.depth}`);
     }
 
     createStyledGround(width, height) {
@@ -1027,8 +1019,8 @@ class GameScene extends Phaser.Scene {
             this.toggleGrid();
         }
         
-        // Update moving block position
-        this.updateMovingBlock();
+        // Update moving block position (disabled for stationary block)
+        // this.updateMovingBlock();
         
         const speed = 120;
         let isMovingHorizontally = false;
