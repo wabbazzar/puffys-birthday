@@ -21,12 +21,60 @@ Hop Hop Puff is a mobile-first HTML5 game built with Phaser.js where Puffy the c
 
 ### Mandatory Commit and Push Protocol
 - **EVERY working change MUST be committed AND pushed immediately**
-- **Use `git add -A && git commit -m "Description" && git push` after each successful implementation**
+- **Use Enhanced Conventional Commits format for all git commits**
 - **NEVER leave uncommitted changes sitting locally**
 - **Push to remote repository ensures backup and collaboration**
 - **Descriptive commit messages with clear explanations**
 - **If push fails, resolve conflicts immediately before continuing**
 - **NO EXCEPTIONS - Every change must be version controlled and backed up**
+
+## Commit Message Standards
+
+Follow Enhanced Conventional Commits format for all git commits:
+
+### Format:
+```
+<type>(<scope>): <subject under 50 chars>
+
+<body (optional)>
+- Brief explanation of what changed
+- Why this change was needed  
+- Any testing notes or breaking changes
+
+```
+
+### Types (Required):
+- `feat` - New feature for the user
+- `fix` - Bug fix for the user  
+- `docs` - Documentation changes
+- `style` - Code formatting, missing semicolons, etc (no production code change)
+- `refactor` - Refactoring production code (no feature change)
+- `test` - Adding/updating tests
+- `chore` - Updating dependencies, build tools, etc (no production code change)
+
+### Scopes (Common):
+`mobile`, `desktop`, `sprite`, `physics`, `collision`, `platform`, `movement`, `controls`, `ui`, `assets`, `performance`, `debug`
+
+### Examples:
+```
+feat(movement): Add moving block with collision detection
+fix(collision): Fix moving block physics body size to match visible sprite
+test(platform): Add comprehensive platform collision testing
+refactor(sprite): Optimize PuffySprite animation system for mobile
+chore(assets): Update block.png with improved transparency handling
+```
+
+### Rules:
+- Subject line: 50 characters max, lowercase after type/scope, no period, imperative mood
+- Body: Explain what and why, include testing notes for significant changes
+- Reference specific game features when applicable (platforms, sprites, physics, etc.)
+
+### Game-Specific Commit Guidelines:
+- **Movement/Physics**: `feat(physics):`, `fix(collision):`, `refactor(movement):`
+- **Sprite/Animation**: `feat(sprite):`, `fix(animation):`, `style(sprite):`
+- **Platform/Level**: `feat(platform):`, `fix(platform):`, `test(platform):`
+- **Mobile/Controls**: `feat(mobile):`, `fix(controls):`, `test(touch):`
+- **Performance**: `perf(mobile):`, `perf(desktop):`, `fix(performance):`
 
 ## Testing Infrastructure & Commands
 
