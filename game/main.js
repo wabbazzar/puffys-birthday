@@ -755,9 +755,13 @@ class GameScene extends Phaser.Scene {
     }
 
     createMovingBlock(blockScale, width, height) {
-        // Set up movement between D11 and G11
+        // Set up movement between D11.5 and G11.5 (half a cell lower)
         const startPos = this.gridSystem.gridToPixel('D11'); // D11 = column 3, row 11
         const endPos = this.gridSystem.gridToPixel('G11');   // G11 = column 6, row 11
+        
+        // Lower by one full cell (32 pixels total)
+        startPos.y += 32;
+        endPos.y += 32;
         
         console.log(`🚀 Creating moving block: D11(${startPos.x}, ${startPos.y}) to G11(${endPos.x}, ${endPos.y})`);
         
@@ -766,19 +770,41 @@ class GameScene extends Phaser.Scene {
         // Use the same scale as platform blocks to match size
         this.movingBlock.setScale(blockScale); // Same as platform blocks for consistent 1 grid cell size
         this.movingBlock.setDepth(10); // Ensure it's visible above background but below UI
-        this.movingBlock.setTint(0xff00ff); // Add magenta tint to make it easily visible for debugging
+        // Remove debug tint now that collision is working
+        // this.movingBlock.setTint(0x00ff00); // Add green tint to make it easily visible for debugging
         
         // Add physics body for collision detection
         this.physics.add.existing(this.movingBlock, false); // Dynamic body (can move)
         this.movingBlock.body.setImmovable(true); // Block doesn't move when hit by Puffy
+        this.movingBlock.body.allowGravity = false; // Disable gravity so it doesn't fall
+        
+        // Calculate the actual visible size of the scaled block
+        const blockTexture = this.textures.get('block').getSourceImage();
+        const visibleWidth = blockTexture.width * blockScale;
+        const visibleHeight = blockTexture.height * blockScale;
+        
+        // Set collision body to match the full visible size
+        this.movingBlock.body.setSize(visibleWidth, visibleHeight);
+        
+        this.movingBlock.body.setCollideWorldBounds(false); // Allow movement within bounds
         this.platforms.add(this.movingBlock); // Add to platforms group for collision
+        
+        console.log(`🔍 COLLISION SIZE: block texture=${blockTexture.width}x${blockTexture.height}, scale=${blockScale.toFixed(3)}, collision=${visibleWidth.toFixed(1)}x${visibleHeight.toFixed(1)}`);
         
         // Set up movement properties
         this.movingBlock.startX = startPos.x;  // D11 position
         this.movingBlock.endX = endPos.x;      // G11 position
+        this.movingBlock.startY = startPos.y;  // Save Y position to prevent drift
         this.movingBlock.y = startPos.y;       // Y stays constant at row 11
         this.movingBlock.direction = 1;        // 1 = moving right (toward G11), -1 = moving left (toward D11)
-        this.movingBlock.speed = 120;          // Same speed as Puffy's walking
+        this.movingBlock.speed = 30;           // 75% slower than Puffy's walking speed (120 * 0.25 = 30)
+        
+        // DEBUG INITIALIZATION
+        console.log(`🔧 BLOCK INIT: direction=${this.movingBlock.direction}, typeof=${typeof this.movingBlock.direction}`);
+        console.log(`🔧 BLOCK POSITION: x=${this.movingBlock.x}, startX=${this.movingBlock.startX}, endX=${this.movingBlock.endX}`);
+        console.log(`🔧 BLOCK PROPERTIES: speed=${this.movingBlock.speed}, visible=${this.movingBlock.visible}, active=${this.movingBlock.active}`);
+        
+        // Collision is working! Remove periodic debug check
         
         // Add protection against accidental destruction
         this.movingBlock.setData('protected', true);
@@ -786,6 +812,8 @@ class GameScene extends Phaser.Scene {
         console.log(`✅ Moving block created: D11→G11 at speed ${this.movingBlock.speed}px/s`);
         console.log(`📐 Block properties: scale=${blockScale.toFixed(3)}, range=${this.movingBlock.startX}-${this.movingBlock.endX}`);
         console.log(`🛡️ Block protected and ready for movement`);
+        console.log(`🔍 COLLISION DEBUG: platforms group size=${this.platforms.children.size}, moving block in group=${this.platforms.contains(this.movingBlock)}`);
+        console.log(`🔍 PHYSICS DEBUG: body exists=${!!this.movingBlock.body}, body immovable=${this.movingBlock.body?.immovable}, body size=${this.movingBlock.body?.width}x${this.movingBlock.body?.height}`);
     }
 
     createStyledGround(width, height) {
@@ -874,6 +902,12 @@ class GameScene extends Phaser.Scene {
                     this.physics.add.collider(this.puffy.sprite, this.ground);
                     this.physics.add.collider(this.puffy.sprite, this.platforms);
                     
+                    // DIRECT collision with moving block (in case platforms group isn't working)
+                    if (this.movingBlock) {
+                        this.physics.add.collider(this.puffy.sprite, this.movingBlock);
+                        console.log('✅ DIRECT collision added between Puffy and moving block');
+                    }
+                    
                     // Birthday gift collision - triggers invitation overlay
                     this.physics.add.overlap(this.puffy.sprite, this.gift, () => {
                         this.showBirthdayInvitation();
@@ -881,6 +915,8 @@ class GameScene extends Phaser.Scene {
                     
                     this.puffyCollisionsSetup = true;
                     console.log('✅ Puffy sprite created and collisions set up with platforms and birthday gift');
+                    console.log(`🔍 COLLISION SETUP: platforms group size=${this.platforms.children.size}`);
+                    console.log(`🔍 PUFFY PHYSICS: body exists=${!!this.puffy.sprite.body}, body size=${this.puffy.sprite.body?.width}x${this.puffy.sprite.body?.height}`);
                 }
                 
             } else if (!this.puffy || !this.puffy.spriteSheetReady) {
@@ -1093,14 +1129,35 @@ class GameScene extends Phaser.Scene {
             return;
         }
         
-        // Use simple fixed movement per frame (much more reliable)
-        // At 60 FPS: 120px/s ÷ 60 = 2px per frame
-        const movement = 2 * this.movingBlock.direction;
+        // Force direction to be valid (1 or -1 only) - FIX CORRUPTION ISSUE
+        if (this.movingBlock.direction !== 1 && this.movingBlock.direction !== -1) {
+            console.log(`🔧 FIXING CORRUPTED DIRECTION: ${this.movingBlock.direction} → 1`);
+            this.movingBlock.direction = 1; // Reset to rightward movement
+        }
+        
+        // If speed is 0, don't move at all
+        if (this.movingBlock.speed === 0) {
+            return; // Block stays stationary
+        }
+        
+        // Use speed property to calculate movement per frame
+        // Speed is in pixels per second, divide by 60 for pixels per frame at 60 FPS
+        const pixelsPerFrame = this.movingBlock.speed / 60;
+        const movement = pixelsPerFrame * this.movingBlock.direction;
+        
+        // Debug the movement calculation
+        if (this.game.loop.frame < 10) {
+            console.log(`🔍 Movement calc: direction=${this.movingBlock.direction}, movement=${movement}, type=${typeof movement}`);
+        }
         
         const oldX = this.movingBlock.x;
         
-        // Update position
-        this.movingBlock.x += movement;
+        // Use physics body velocity instead of direct position changes for better collision
+        if (this.movingBlock.body) {
+            // Set velocity based on movement direction
+            this.movingBlock.body.setVelocityX(movement * 60); // Convert to velocity (pixels per second)
+            this.movingBlock.body.setVelocityY(0); // Keep Y velocity at 0
+        }
         
         // INTENSIVE DEBUG - log every frame for first 5 seconds
         if (this.game.loop.frame < 300) {
@@ -1113,25 +1170,28 @@ class GameScene extends Phaser.Scene {
             console.log(`🔄 Hit right boundary at ${this.movingBlock.x}, reversing to left`);
             this.movingBlock.x = this.movingBlock.endX;
             this.movingBlock.direction = -1;
+            this.movingBlock.body.setVelocityX(0); // Stop movement briefly
         } else if (this.movingBlock.direction === -1 && this.movingBlock.x <= this.movingBlock.startX) {
             // Hit left boundary, reverse direction
             console.log(`🔄 Hit left boundary at ${this.movingBlock.x}, reversing to right`);
             this.movingBlock.x = this.movingBlock.startX;
             this.movingBlock.direction = 1;
+            this.movingBlock.body.setVelocityX(0); // Stop movement briefly
+        }
+        
+        // SAFETY CLAMP - prevent extreme positions
+        if (this.movingBlock.x < -50 || this.movingBlock.x > 370) {
+            console.log(`🚨 EXTREME POSITION DETECTED: ${this.movingBlock.x} - CLAMPING TO SAFE RANGE`);
+            // Reset to start position and force valid direction
+            this.movingBlock.x = this.movingBlock.startX;
+            this.movingBlock.y = this.movingBlock.startY;
+            this.movingBlock.direction = 1;
+            this.movingBlock.body.setVelocityX(0);
         }
         
         // Check if position is reasonable
         if (this.movingBlock.x < 0 || this.movingBlock.x > 320) {
             console.log(`⚠️ Block position out of bounds: ${this.movingBlock.x}`);
-        }
-        
-        // Update physics body position to match sprite position
-        if (this.movingBlock.body) {
-            // For Phaser Arcade Physics, use x and y properties or setX/setY methods
-            this.movingBlock.body.x = this.movingBlock.x - this.movingBlock.width / 2;
-            this.movingBlock.body.y = this.movingBlock.y - this.movingBlock.height / 2;
-        } else {
-            console.log('⚠️ Moving block has no physics body!');
         }
     }
 
